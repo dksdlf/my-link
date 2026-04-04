@@ -1,92 +1,154 @@
-
+import React from 'react';
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 sm:p-8 overflow-hidden relative selection:bg-indigo-500/30">
+    <div className="min-h-screen bg-[#fdfbf7] text-slate-900 font-sans selection:bg-yellow-300 selection:text-black">
       
-      {/* Dynamic Animated Background */}
-      <div className="absolute inset-x-0 top-0 h-full w-full pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-indigo-500 rounded-full mix-blend-screen overflow-hidden filter blur-[100px] opacity-40 animate-blob"></div>
-        <div className="absolute top-1/3 right-1/4 w-72 h-72 bg-purple-500 rounded-full mix-blend-screen overflow-hidden filter blur-[100px] opacity-40 animate-blob animation-delay-2000"></div>
-        <div className="absolute -bottom-8 left-1/3 w-72 h-72 bg-pink-500 rounded-full mix-blend-screen overflow-hidden filter blur-[100px] opacity-40 animate-blob animation-delay-4000"></div>
-      </div>
+      {/* Navigation / Header bar - Neobrutalist style */}
+      <nav className="p-4 sm:p-6 border-b-4 border-black flex justify-between items-center bg-white sticky top-0 z-50">
+        <div className="text-2xl font-black uppercase tracking-tighter">
+          AJY<span className="text-blue-600">.PORTFOLIO</span>
+        </div>
+        <a 
+          href="#contact" 
+          className="px-5 py-2 bg-yellow-400 font-bold border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] transition-all"
+        >
+          Contact
+        </a>
+      </nav>
 
-      {/* Glassmorphism Profile Card */}
-      <main className="relative w-full max-w-2xl bg-white/5 backdrop-blur-3xl border border-white/10 p-8 sm:p-12 rounded-3xl shadow-2xl overflow-hidden group">
+      <main className="max-w-7xl mx-auto px-4 sm:px-8 py-12 sm:py-24 space-y-24">
         
-        {/* Subtle moving glow inside the card on hover */}
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"></div>
-
-        <div className="relative z-10 flex flex-col items-center text-center space-y-8">
-          
-          {/* Avatar Section */}
-          <div className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full p-1 bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 shadow-xl group-hover:scale-105 transition-transform duration-500 hover:shadow-indigo-500/50">
-            <div className="w-full h-full bg-slate-900 rounded-full flex items-center justify-center overflow-hidden">
-               {/* Initial Placeholder */}
-               <span className="text-5xl font-extrabold bg-clip-text text-transparent bg-gradient-to-br from-indigo-300 to-purple-300">
-                 AJY
-               </span>
+        {/* HERO SECTION */}
+        <section className="flex flex-col lg:flex-row gap-12 items-center justify-between">
+          <div className="w-full lg:w-1/2 space-y-8">
+            <div className="inline-block px-4 py-2 bg-blue-500 text-white font-bold border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transform -rotate-2">
+              Student & Developer
             </div>
-            {/* Online Status Dot */}
-            <div className="absolute bottom-2 right-2 w-5 h-5 bg-green-500 border-4 border-slate-900 rounded-full shadow-sm animate-pulse"></div>
-          </div>
-          
-          {/* Title & Subtitle */}
-          <div className="space-y-3">
-            <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-white drop-shadow-md">
+            <h1 className="text-6xl sm:text-8xl font-black uppercase leading-tight tracking-tighter">
               안재연
             </h1>
-            <p className="text-lg sm:text-xl font-medium text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-purple-300">
-              상명대학교 정보보안공학과
+            <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-800 leading-snug">
+              상명대학교 <br className="hidden sm:block" /> 
+              <span className="bg-yellow-300 px-2 inline-block border-2 border-black mt-2">정보보안공학과</span>
+            </h2>
+            <p className="text-lg sm:text-xl font-medium max-w-lg border-l-[6px] border-black pl-5 py-2">
+              바이브 코딩을 배우고 있는 대학생입니다. 정보보안에 관심이 많으며 문제 해결을 즐기는 개발자를 꿈꿉니다.
             </p>
+            <div className="flex flex-wrap gap-4 pt-4">
+              <a 
+                href="#projects" 
+                className="px-8 py-4 bg-purple-500 text-white text-lg font-black uppercase border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[6px] hover:translate-y-[6px] transition-all"
+              >
+                View Work
+              </a>
+              <a 
+                href="https://github.com/dksdlf" 
+                target="_blank" 
+                rel="noreferrer"
+                className="px-8 py-4 bg-white text-black text-lg font-black uppercase border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[6px] hover:translate-y-[6px] transition-all flex items-center gap-2"
+              >
+                 GitHub
+              </a>
+            </div>
           </div>
 
-          <div className="w-16 sm:w-24 h-1.5 rounded-full bg-gradient-to-r from-indigo-500 to-pink-500 opacity-80" />
-
-          {/* Bio */}
-          <p className="text-sm sm:text-base leading-relaxed text-slate-300/90 max-w-md font-light tracking-wide">
-            안녕하세요 바이브 코딩을 배우고 있는 대학생입니다. 
-            정보보안에 관심이 많으며 문제 해결을 즐기는 개발자를 꿈꿉니다.
-          </p>
-
-          {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 pt-4 w-full sm:w-auto">
-            <button className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-300 text-white text-sm font-semibold tracking-wide backdrop-blur-md shadow-lg hover:shadow-white/5 hover:-translate-y-1">
-              Contact Me
-            </button>
-            <button className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 transition-all duration-300 text-white text-sm font-semibold tracking-wide shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:-translate-y-1 flex items-center justify-center gap-2">
-              View Projects
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 ml-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-            </button>
+          {/* Decorative Elements for Hero (Replacement for Avatar) */}
+          <div className="w-full lg:w-1/2 relative h-80 sm:h-96 lg:h-[500px] flex items-center justify-center">
+             <div className="relative w-full max-w-[400px] h-full max-h-[400px]">
+                {/* Spinning dashed circle */}
+                <div className="absolute inset-0 bg-blue-500 border-4 border-black border-dashed rounded-full animate-[spin_20s_linear_infinite]"></div>
+                {/* Yellow rectangle */}
+                <div className="absolute inset-4 sm:inset-8 bg-yellow-400 border-4 border-black rotate-12 shadow-[12px_12px_0px_0px_rgba(0,0,0,1)]"></div>
+                {/* Purple rectangle with text */}
+                <div className="absolute inset-12 sm:inset-16 bg-purple-500 border-4 border-black -rotate-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center">
+                   <div className="text-black font-black text-5xl sm:text-7xl uppercase transform -rotate-12 bg-white px-4 py-2 border-4 border-black whitespace-nowrap overflow-hidden text-ellipsis max-w-[80%] text-center">
+                    DEV
+                   </div>
+                </div>
+             </div>
           </div>
+        </section>
 
-          {/* Social Links */}
-          <div className="flex gap-6 mt-8 pt-8 border-t border-white/10 w-full justify-center">
-            {/* Github */}
-            <a href="#" className="p-3.5 bg-white/5 rounded-full hover:bg-white/10 transition-colors text-slate-400 hover:text-white border border-white/5 hover:border-white/10 hover:-translate-y-1 duration-300">
-              <span className="sr-only">GitHub</span>
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" />
-              </svg>
-            </a>
-            {/* LinkedIn */}
-            <a href="#" className="p-3.5 bg-white/5 rounded-full hover:bg-white/10 transition-colors text-slate-400 hover:text-white border border-white/5 hover:border-white/10 hover:-translate-y-1 duration-300">
-              <span className="sr-only">LinkedIn</span>
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-              </svg>
-            </a>
-            {/* Email */}
-            <a href="#" className="p-3.5 bg-white/5 rounded-full hover:bg-white/10 transition-colors text-slate-400 hover:text-white border border-white/5 hover:border-white/10 hover:-translate-y-1 duration-300">
-              <span className="sr-only">Email</span>
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
-            </a>
+        {/* SKILLS & INTERESTS SECTION */}
+        <section className="space-y-12 bg-red-400 p-8 sm:p-16 border-4 border-black shadow-[16px_16px_0px_0px_rgba(0,0,0,1)]">
+          <h2 className="text-4xl sm:text-6xl lg:text-7xl font-black text-white uppercase text-center drop-shadow-[4px_4px_0_rgba(0,0,0,1)] lg:drop-shadow-[6px_6px_0_rgba(0,0,0,1)]">
+            Interests
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+            {[
+              { title: "Info Security", color: "bg-yellow-300" },
+              { title: "Vibe Coding", color: "bg-blue-300" },
+              { title: "Problem Solving", color: "bg-white" },
+              { title: "Web Architecture", color: "bg-pink-300" },
+              { title: "Systems Dev", color: "bg-green-300" },
+              { title: "AI Integration", color: "bg-purple-300" },
+            ].map((skill, idx) => (
+              <div 
+                key={idx} 
+                className={`${skill.color} p-6 sm:p-8 border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-2 hover:shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] transition-all`}
+              >
+                <div className="text-xl sm:text-2xl font-black uppercase text-center">{skill.title}</div>
+              </div>
+            ))}
           </div>
+        </section>
 
-        </div>
+        {/* PROJECTS PLACEHOLDER SECTION */}
+        <section id="projects" className="space-y-12">
+            <h2 className="text-5xl sm:text-7xl font-black uppercase inline-block border-b-8 border-black pb-2">
+              Featured Work
+            </h2>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+               {[1, 2].map((item) => (
+                 <div key={item} className="bg-white border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] p-6 sm:p-8 flex flex-col gap-6 group">
+                   <div className="w-full aspect-video bg-slate-200 border-4 border-black flex items-center justify-center relative overflow-hidden">
+                      {/* Placeholder patterns */}
+                      <div className="absolute inset-x-0 h-full w-full bg-repeating-linear-gradient-45 from-transparent to-transparent bg-[length:20px_20px] border-black/10 border-r border-b"></div>
+                      <div className="relative text-4xl font-extrabold text-slate-400 transform -rotate-12 group-hover:scale-110 transition-transform">
+                        IMAGE {item}
+                      </div>
+                      <div className="absolute bg-black text-white px-4 py-2 top-4 left-4 font-bold border-2 border-white transform -rotate-3 group-hover:rotate-0 transition-transform">Project {item}</div>
+                   </div>
+                   <div className="flex-grow">
+                     <h3 className="text-3xl font-black mb-2">My Awesome Project {item}</h3>
+                     <p className="text-lg font-medium text-slate-700">이 프로젝트는 정보보안과 웹 개발을 융합한 실험적인 프로젝트입니다. 네오브루탈리즘 레이아웃을 통해 강렬한 인상을 남깁니다.</p>
+                   </div>
+                   <button className="mt-auto self-start px-6 py-3 bg-black text-white text-lg font-bold uppercase border-2 border-black hover:bg-yellow-400 hover:text-black transition-colors shadow-[4px_4px_0px_0px_rgba(150,150,150,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                     Read Case Study
+                   </button>
+                 </div>
+               ))}
+            </div>
+        </section>
+
       </main>
+
+      {/* FOOTER / CONTACT */}
+      <footer id="contact" className="mt-24 border-t-8 border-black bg-blue-600 text-white p-8 sm:p-16 text-center lg:text-left shadow-[inset_0px_16px_0px_0px_rgba(0,0,0,0.1)]">
+        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row justify-between items-center gap-12">
+          <div className="space-y-4">
+            <h2 className="text-6xl sm:text-8xl font-black uppercase drop-shadow-[4px_4px_0_rgba(0,0,0,1)] lg:drop-shadow-[6px_6px_0_rgba(0,0,0,1)]">Let's Talk.</h2>
+            <p className="text-xl sm:text-2xl font-bold max-w-md mx-auto lg:mx-0">빠르게 성장하는 개발자입니다. 의견이나 문의사항이 있으시면 언제든지 연락주세요.</p>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-6 w-full lg:w-auto">
+             <a href="mailto:contact@example.com" className="w-full sm:w-auto px-8 py-5 bg-yellow-400 text-black text-xl sm:text-2xl font-black uppercase border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all">
+               Send Email
+             </a>
+             <a href="https://github.com/dksdlf" target="_blank" rel="noreferrer" className="w-full sm:w-auto px-8 py-5 bg-white text-black text-xl sm:text-2xl font-black uppercase border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all">
+               GitHub
+             </a>
+          </div>
+        </div>
+        <div className="mt-16 pt-8 border-t-4 border-black/30 font-bold max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+          <p className="text-center sm:text-left text-lg">© {new Date().getFullYear()} AHN JAEYEON. All rights reserved.</p>
+          <div className="flex gap-4">
+            <span className="w-4 h-4 bg-red-400 rounded-full border-2 border-black inline-block"></span>
+            <span className="w-4 h-4 bg-yellow-400 rounded-full border-2 border-black inline-block"></span>
+            <span className="w-4 h-4 bg-green-400 rounded-full border-2 border-black inline-block"></span>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
