@@ -1,7 +1,43 @@
-import { dummyLinks } from "@/data/links";
+"use client";
+
+import { useState } from "react";
+import { dummyLinks, type Link } from "@/data/links";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default function Page() {
+  const [links, setLinks] = useState<Link[]>(dummyLinks);
+  const [newLink, setNewLink] = useState({ title: "", url: "" });
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const handleAddLink = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newLink.title || !newLink.url) return;
+
+    const link: Link = {
+      id: Math.random().toString(36).substring(2, 9),
+      title: newLink.title,
+      url: newLink.url.startsWith("http") ? newLink.url : `https://${newLink.url}`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    setLinks((prev) => [link, ...prev]);
+    setNewLink({ title: "", url: "" });
+    setIsDialogOpen(false);
+  };
+
   return (
     <div className="relative min-h-svh w-full overflow-hidden bg-slate-950 text-slate-50 selection:bg-indigo-500/30">
       {/* Dynamic Background Effects */}
@@ -31,7 +67,72 @@ export default function Page() {
 
         {/* Links Section */}
         <div className="flex w-full max-w-md flex-col gap-4 animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-150 fill-mode-both">
-          {dummyLinks.map((link) => {
+          {/* Add New Link Button */}
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button 
+                variant="outline" 
+                className="group relative flex h-14 w-full items-center justify-center gap-2 rounded-2xl border-dashed border-white/20 bg-white/5 font-semibold text-zinc-300 transition-all hover:border-indigo-500/50 hover:bg-white/10 hover:text-white"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="transition-transform group-hover:rotate-90"
+                >
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
+                새 링크 추가하기
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="border-white/10 bg-zinc-900/90 text-zinc-100 backdrop-blur-xl sm:max-w-[425px]">
+              <form onSubmit={handleAddLink}>
+                <DialogHeader>
+                  <DialogTitle className="text-xl font-bold">새 링크 추가</DialogTitle>
+                  <DialogDescription className="text-zinc-400">
+                    방문자에게 보여줄 새로운 링크 정보를 입력해주세요.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-6">
+                  <div className="grid gap-2">
+                    <Label htmlFor="title" className="text-zinc-300">제목</Label>
+                    <Input
+                      id="title"
+                      placeholder="예: 나의 깃허브"
+                      className="border-white/10 bg-white/5 text-zinc-100 focus:border-indigo-500/50"
+                      value={newLink.title}
+                      onChange={(e) => setNewLink({ ...newLink, title: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="url" className="text-zinc-300">URL 주소</Label>
+                    <Input
+                      id="url"
+                      placeholder="https://github.com/username"
+                      className="border-white/10 bg-white/5 text-zinc-100 focus:border-indigo-500/50"
+                      value={newLink.url}
+                      onChange={(e) => setNewLink({ ...newLink, url: e.target.value })}
+                      required
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button type="submit" className="w-full bg-indigo-600 font-bold text-white hover:bg-indigo-500">
+                    추가 완료
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+
+          {links.map((link) => {
             let domain = "";
             try {
               domain = new URL(link.url).hostname;
