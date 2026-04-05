@@ -1,5 +1,5 @@
 import { dummyLinks } from "@/data/links";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 
 export default function Page() {
   return (
@@ -16,7 +16,6 @@ export default function Page() {
           <div className="relative group cursor-default">
             <div className="absolute -inset-0.5 rounded-full bg-gradient-to-r from-indigo-500 to-fuchsia-500 opacity-50 blur-md group-hover:opacity-100 transition duration-500"></div>
             <div className="relative h-28 w-28 rounded-full bg-zinc-900 overflow-hidden border-2 border-zinc-800 shadow-2xl flex items-center justify-center">
-              {/* Profile Avatar Placeholder (will be replaced by Firebase User Image) */}
               <span className="text-4xl font-mono text-zinc-500">M</span>
             </div>
           </div>
@@ -48,32 +47,36 @@ export default function Page() {
                 rel="noopener noreferrer"
                 className="group block w-full outline-none"
               >
-                <Card className="relative flex flex-row items-center gap-0 p-4 py-4 h-16 bg-white/5 border border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.1)] backdrop-blur-md overflow-hidden transition-all duration-300 group-hover:bg-white/10 group-hover:border-white/20 group-hover:-translate-y-1 group-hover:shadow-[0_8px_40px_rgba(79,70,229,0.15)] group-focus-visible:ring-2 group-focus-visible:ring-indigo-500 rounded-2xl">
+                {/* 1. Card 컨테이너: 전체 배경, 테두리, 그림자, 호버 트랜지션 처리 */}
+                <Card className="relative overflow-hidden rounded-2xl bg-white/5 border border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.1)] backdrop-blur-md transition-all duration-300 group-hover:bg-white/10 group-hover:border-white/20 group-hover:-translate-y-1 group-hover:shadow-[0_8px_40px_rgba(79,70,229,0.15)] group-focus-visible:ring-2 group-focus-visible:ring-indigo-500 py-0 gap-0">
                   
                   {/* Subtle Gradient Hover Overlay */}
                   <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/0 via-indigo-500/0 to-fuchsia-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-                  {domain && (
-                    <div className="relative z-10 flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-xl bg-white/10 border border-white/5 shadow-inner mr-4">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img 
-                        src={`https://s2.googleusercontent.com/s2/favicons?domain=${domain}&sz=64`} 
-                        alt="" 
-                        width={24} 
-                        height={24}
-                        className="rounded-sm drop-shadow-md transition-transform duration-300 group-hover:scale-110"
-                      />
+                  {/* 2. CardContent 컨테이너: 내부 엘리먼트 수평 정렬, 패딩 처리 */}
+                  <CardContent className="relative z-10 flex flex-row items-center p-4 pl-4 h-16 w-full">
+                    {domain && (
+                      <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-xl bg-white/10 border border-white/5 shadow-inner mr-4">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img 
+                          src={`https://s2.googleusercontent.com/s2/favicons?domain=${domain}&sz=64`} 
+                          alt="" 
+                          width={24} 
+                          height={24}
+                          className="rounded-sm drop-shadow-md transition-transform duration-300 group-hover:scale-110"
+                        />
+                      </div>
+                    )}
+                    
+                    <div className="flex-1 text-center font-semibold tracking-wide text-zinc-100 pr-14">
+                      {link.title}
                     </div>
-                  )}
-                  
-                  <div className="relative z-10 flex-1 text-center font-semibold tracking-wide text-zinc-100 pr-14">
-                    {link.title}
-                  </div>
 
-                  {/* Hover Arrow Icon */}
-                  <div className="absolute right-5 flex items-center justify-center text-zinc-500 transition-transform duration-300 group-hover:translate-x-1 group-hover:text-zinc-300">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                  </div>
+                    {/* Hover Arrow Icon */}
+                    <div className="absolute right-5 flex items-center justify-center text-zinc-500 transition-transform duration-300 group-hover:translate-x-1 group-hover:text-zinc-300">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                    </div>
+                  </CardContent>
                 </Card>
               </a>
             );
