@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { dummyLinks, type Link } from "@/data/links";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,26 +19,55 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+// Zod 스키마 정의
+const linkSchema = z.object({
+  title: z.string()
+    .min(2, { message: "제목은 최소 2자 이상 입력해주세요." })
+    .max(20, { message: "제목은 20자 이내로 입력해주세요." }),
+  url: z.string()
+    .min(1, { message: "URL을 입력해주세요." })
+    .url({ message: "올바른 URL 형식이 아닙니다. (http:// 또는 https:// 포함)" }),
+});
+
+type LinkFormValues = z.infer<typeof linkSchema>;
+
 export default function Page() {
   const [links, setLinks] = useState<Link[]>(dummyLinks);
-  const [newLink, setNewLink] = useState({ title: "", url: "" });
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const handleAddLink = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newLink.title || !newLink.url) return;
+  // React Hook Form 설정
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<LinkFormValues>({
+    resolver: zodResolver(linkSchema),
+    defaultValues: {
+      title: "",
+      url: "",
+    },
+  });
 
+  const onSubmit = (data: LinkFormValues) => {
     const link: Link = {
       id: Math.random().toString(36).substring(2, 9),
-      title: newLink.title,
-      url: newLink.url.startsWith("http") ? newLink.url : `https://${newLink.url}`,
+      title: data.title,
+      url: data.url,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
 
     setLinks((prev) => [link, ...prev]);
-    setNewLink({ title: "", url: "" });
     setIsDialogOpen(false);
+    reset(); // 폼 초기화
+  };
+
+  const handleOpenChange = (open: boolean) => {
+    setIsDialogOpen(open);
+    if (!open) {
+      reset(); // 다이얼로그가 닫힐 때 폼과 오류 메시지 초기화
+    }
   };
 
   return (
@@ -68,7 +100,7 @@ export default function Page() {
         {/* Links Section */}
         <div className="flex w-full max-w-md flex-col gap-4 animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-150 fill-mode-both">
           {/* Add New Link Button */}
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <Dialog open={isDialogOpen} onOpenChange={handleOpenChange}>
             <DialogTrigger asChild>
               <Button 
                 variant="outline" 
@@ -92,7 +124,7 @@ export default function Page() {
               </Button>
             </DialogTrigger>
             <DialogContent className="border-white/10 bg-zinc-900/90 text-zinc-100 backdrop-blur-xl sm:max-w-[425px]">
-              <form onSubmit={handleAddLink}>
+              <form onSubmit={handleSubmit(onSubmit)}>
                 <DialogHeader>
                   <DialogTitle className="text-xl font-bold">새 링크 추가</DialogTitle>
                   <DialogDescription className="text-zinc-400">
@@ -105,22 +137,24 @@ export default function Page() {
                     <Input
                       id="title"
                       placeholder="예: 나의 깃허브"
-                      className="border-white/10 bg-white/5 text-zinc-100 focus:border-indigo-500/50"
-                      value={newLink.title}
-                      onChange={(e) => setNewLink({ ...newLink, title: e.target.value })}
-                      required
+                      className={`border-white/10 bg-white/5 text-zinc-100 focus:border-indigo-500/50 ${errors.title ? "border-red-500/50 focus:border-red-500/50" : ""}`}
+                      {...register("title")}
                     />
+                    {errors.title && (
+                      <p className="text-xs font-medium text-red-400">{errors.title.message}</p>
+                    )}
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="url" className="text-zinc-300">URL 주소</Label>
                     <Input
                       id="url"
                       placeholder="https://github.com/username"
-                      className="border-white/10 bg-white/5 text-zinc-100 focus:border-indigo-500/50"
-                      value={newLink.url}
-                      onChange={(e) => setNewLink({ ...newLink, url: e.target.value })}
-                      required
+                      className={`border-white/10 bg-white/5 text-zinc-100 focus:border-indigo-500/50 ${errors.url ? "border-red-500/50 focus:border-red-500/50" : ""}`}
+                      {...register("url")}
                     />
+                    {errors.url && (
+                      <p className="text-xs font-medium text-red-400">{errors.url.message}</p>
+                    )}
                   </div>
                 </div>
                 <DialogFooter>
