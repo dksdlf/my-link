@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { type Link } from "@/data/links";
 import { db } from "@/lib/firebase";
-import { collection, addDoc, serverTimestamp, query, orderBy, onSnapshot } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, query, orderBy, getDocs } from "firebase/firestore";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -38,26 +38,31 @@ export default function Page() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   useEffect(() => {
-    const q = query(
-      collection(db, "users", "anonymous", "links"),
-      orderBy("createdAt", "desc")
-    );
+    const fetchLinks = async () => {
+      const q = query(
+        collection(db, "users", "anonymous", "links"),
+        orderBy("createdAt", "desc")
+      );
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const fetchedLinks: Link[] = snapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          title: data.title,
-          url: data.url,
-          createdAt: data.createdAt ? data.createdAt.toDate().toISOString() : new Date().toISOString(),
-          updatedAt: data.updatedAt ? data.updatedAt.toDate().toISOString() : new Date().toISOString(),
-        };
-      });
-      setLinks(fetchedLinks);
-    });
+      try {
+        const querySnapshot = await getDocs(q);
+        const fetchedLinks: Link[] = querySnapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            title: data.title,
+            url: data.url,
+            createdAt: data.createdAt ? data.createdAt.toDate().toISOString() : new Date().toISOString(),
+            updatedAt: data.updatedAt ? data.updatedAt.toDate().toISOString() : new Date().toISOString(),
+          };
+        });
+        setLinks(fetchedLinks);
+      } catch (error) {
+        console.error("Error fetching links: ", error);
+      }
+    };
 
-    return () => unsubscribe();
+    fetchLinks();
   }, []);
 
   // React Hook Form 설정
@@ -77,13 +82,22 @@ export default function Page() {
   const onSubmit = async (data: LinkFormValues) => {
     try {
       const linksRef = collection(db, "users", "anonymous", "links");
-      await addDoc(linksRef, {
+      const docRef = await addDoc(linksRef, {
         title: data.title,
         url: data.url,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
 
+      const newLink: Link = {
+        id: docRef.id,
+        title: data.title,
+        url: data.url,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      setLinks((prev) => [newLink, ...prev]);
       setIsDialogOpen(false);
       reset(); // 폼 초기화
     } catch (error) {
