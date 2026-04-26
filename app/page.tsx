@@ -5,6 +5,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { dummyLinks, type Link } from "@/data/links";
+import { db } from "@/lib/firebase";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -49,18 +51,31 @@ export default function Page() {
     },
   });
 
-  const onSubmit = (data: LinkFormValues) => {
-    const link: Link = {
-      id: Math.random().toString(36).substring(2, 9),
-      title: data.title,
-      url: data.url,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+  const onSubmit = async (data: LinkFormValues) => {
+    try {
+      const linksRef = collection(db, "users", "anonymous", "links");
+      const docRef = await addDoc(linksRef, {
+        title: data.title,
+        url: data.url,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
 
-    setLinks((prev) => [link, ...prev]);
-    setIsDialogOpen(false);
-    reset(); // 폼 초기화
+      const newLink: Link = {
+        id: docRef.id,
+        title: data.title,
+        url: data.url,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      setLinks((prev) => [newLink, ...prev]);
+      setIsDialogOpen(false);
+      reset(); // 폼 초기화
+    } catch (error) {
+      console.error("Error adding document: ", error);
+      alert("링크 추가 중 오류가 발생했습니다.");
+    }
   };
 
   const handleOpenChange = (open: boolean) => {
