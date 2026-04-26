@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { type Link } from "@/data/links";
 import { db } from "@/lib/firebase";
-import { collection, addDoc, serverTimestamp, query, orderBy, getDocs } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, query, orderBy, getDocs, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -36,6 +36,25 @@ type LinkFormValues = z.infer<typeof linkSchema>;
 export default function Page() {
   const [links, setLinks] = useState<Link[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  // 수정(Edit) 상태 및 React Hook Form
+  const [editingLinkId, setEditingLinkId] = useState<string | null>(null);
+  const {
+    register: registerEdit,
+    handleSubmit: handleSubmitEdit,
+    reset: resetEdit,
+    formState: { errors: editErrorsForm, isSubmitting: isEditSubmitting },
+  } = useForm<LinkFormValues>({
+    resolver: zodResolver(linkSchema),
+    defaultValues: {
+      title: "",
+      url: "",
+    },
+  });
+
+  // 삭제(Delete) 상태
+  const [deletingLink, setDeletingLink] = useState<Link | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     const fetchLinks = async () => {
@@ -70,7 +89,7 @@ export default function Page() {
     register,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<LinkFormValues>({
     resolver: zodResolver(linkSchema),
     defaultValues: {
@@ -110,6 +129,56 @@ export default function Page() {
     setIsDialogOpen(open);
     if (!open) {
       reset(); // 다이얼로그가 닫힐 때 폼과 오류 메시지 초기화
+    }
+  };
+
+  const handleEditClick = (link: Link) => {
+    setEditingLinkId(link.id);
+    resetEdit({ title: link.title, url: link.url });
+  };
+
+  const handleEditCancel = () => {
+    setEditingLinkId(null);
+    resetEdit({ title: "", url: "" });
+  };
+
+  const onEditSubmit = async (data: LinkFormValues, id: string) => {
+    try {
+      const linkRef = doc(db, "users", "anonymous", "links", id);
+      await updateDoc(linkRef, {
+        title: data.title,
+        url: data.url,
+        updatedAt: serverTimestamp(),
+      });
+
+      setLinks((prev) =>
+        prev.map((link) =>
+          link.id === id
+            ? { ...link, title: data.title, url: data.url, updatedAt: new Date().toISOString() }
+            : link
+        )
+      );
+      setEditingLinkId(null);
+      resetEdit({ title: "", url: "" });
+    } catch (error) {
+      console.error("Error updating document: ", error);
+      alert("링크 수정 중 오류가 발생했습니다.");
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deletingLink) return;
+    setIsDeleting(true);
+    try {
+      const linkRef = doc(db, "users", "anonymous", "links", deletingLink.id);
+      await deleteDoc(linkRef);
+      setLinks((prev) => prev.filter((link) => link.id !== deletingLink.id));
+      setDeletingLink(null);
+    } catch (error) {
+      console.error("Error deleting document: ", error);
+      alert("링크 삭제 중 오류가 발생했습니다.");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -201,11 +270,39 @@ export default function Page() {
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button type="submit" className="w-full bg-indigo-600 font-bold text-white hover:bg-indigo-500">
-                    추가 완료
+                  <Button type="submit" disabled={isSubmitting} className="w-full bg-indigo-600 font-bold text-white hover:bg-indigo-500 disabled:opacity-50 flex items-center justify-center gap-2">
+                    {isSubmitting && (
+                      <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    )}
+                    {isSubmitting ? "추가 중..." : "추가 완료"}
                   </Button>
                 </DialogFooter>
               </form>
+            </DialogContent>
+          </Dialog>
+
+          {/* Delete Confirmation Modal */}
+          <Dialog open={!!deletingLink} onOpenChange={(open) => !open && setDeletingLink(null)}>
+            <DialogContent className="border-white/10 bg-zinc-900/90 text-zinc-100 backdrop-blur-xl sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle className="text-xl font-bold">정말 삭제하시겠습니까?</DialogTitle>
+                <DialogDescription className="text-zinc-400">
+                  <span className="text-base text-zinc-200 block mt-2 mb-4 font-semibold">{deletingLink?.title}</span>
+                  <span className="text-red-500 font-medium block">이 작업은 되돌릴 수 없습니다</span>
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter className="mt-4 gap-2 sm:gap-0">
+                <Button variant="outline" disabled={isDeleting} onClick={() => setDeletingLink(null)} className="border-white/10 bg-transparent text-zinc-300 hover:bg-white/5 hover:text-white">
+                  취소
+                </Button>
+                <Button variant="destructive" disabled={isDeleting} onClick={handleDeleteConfirm} className="bg-red-600 hover:bg-red-700 text-white font-bold disabled:opacity-50 min-w-[80px] flex items-center justify-center">
+                  {isDeleting ? (
+                    <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                  ) : (
+                    "삭제하기"
+                  )}
+                </Button>
+              </DialogFooter>
             </DialogContent>
           </Dialog>
 
@@ -217,46 +314,104 @@ export default function Page() {
               domain = "";
             }
             
+            const isEditing = editingLinkId === link.id;
+
             return (
-              <a 
+              <div 
                 key={link.id} 
-                href={link.url} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="group block w-full outline-none"
+                className="group relative block w-full outline-none"
               >
-                {/* 1. Card 컨테이너: 전체 배경, 테두리, 그림자, 호버 트랜지션 처리 */}
-                <Card className="relative overflow-hidden rounded-2xl bg-white/5 border border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.1)] backdrop-blur-md transition-all duration-300 group-hover:bg-white/10 group-hover:border-white/20 group-hover:-translate-y-1 group-hover:shadow-[0_8px_40px_rgba(79,70,229,0.15)] group-focus-visible:ring-2 group-focus-visible:ring-indigo-500 py-0 gap-0">
+                {/* 1. Card 컨테이너 */}
+                <Card className={`relative overflow-hidden rounded-2xl bg-white/5 border border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.1)] backdrop-blur-md transition-all duration-300 py-0 gap-0 ${!isEditing ? "group-hover:bg-white/10 group-hover:border-white/20 group-hover:-translate-y-1 group-hover:shadow-[0_8px_40px_rgba(79,70,229,0.15)] group-focus-within:ring-2 group-focus-within:ring-indigo-500" : ""}`}>
                   
                   {/* Subtle Gradient Hover Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/0 via-indigo-500/0 to-fuchsia-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  {!isEditing && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/0 via-indigo-500/0 to-fuchsia-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                  )}
 
-                  {/* 2. CardContent 컨테이너: 내부 엘리먼트 수평 정렬, 패딩 처리 */}
-                  <CardContent className="relative z-10 flex flex-row items-center p-4 pl-4 h-16 w-full">
-                    {domain && (
-                      <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-xl bg-white/10 border border-white/5 shadow-inner mr-4">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img 
-                          src={`https://s2.googleusercontent.com/s2/favicons?domain=${domain}&sz=64`} 
-                          alt="" 
-                          width={24} 
-                          height={24}
-                          className="rounded-sm drop-shadow-md transition-transform duration-300 group-hover:scale-110"
-                        />
+                  {/* 2. CardContent 컨테이너 */}
+                  <CardContent className={`relative z-10 flex flex-col justify-center p-4 w-full ${isEditing ? "" : "min-h-[4rem]"}`}>
+                    {isEditing ? (
+                      <form onSubmit={handleSubmitEdit((data) => onEditSubmit(data, link.id))} className="flex flex-col gap-3 w-full">
+                        <div className="space-y-1">
+                          <Input
+                            placeholder="제목 (예: 나의 깃허브)"
+                            className={`h-10 border-white/10 bg-white/5 text-zinc-100 focus:border-indigo-500/50 ${editErrorsForm.title ? "border-red-500/50" : ""}`}
+                            {...registerEdit("title")}
+                          />
+                          {editErrorsForm.title && <p className="text-[11px] font-medium text-red-400 pl-1">{editErrorsForm.title.message}</p>}
+                        </div>
+                        <div className="space-y-1">
+                          <Input
+                            placeholder="URL (https://...)"
+                            className={`h-10 border-white/10 bg-white/5 text-zinc-100 focus:border-indigo-500/50 ${editErrorsForm.url ? "border-red-500/50" : ""}`}
+                            {...registerEdit("url")}
+                          />
+                          {editErrorsForm.url && <p className="text-[11px] font-medium text-red-400 pl-1">{editErrorsForm.url.message}</p>}
+                        </div>
+                        <div className="flex justify-end gap-2 mt-2">
+                          <Button type="button" size="sm" variant="ghost" disabled={isEditSubmitting} onClick={handleEditCancel} className="h-9 px-4 text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/10 rounded-xl">취소</Button>
+                          <Button type="submit" size="sm" disabled={isEditSubmitting} className="h-9 px-4 text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl disabled:opacity-50 min-w-[60px] flex items-center justify-center">
+                            {isEditSubmitting ? (
+                              <svg className="animate-spin h-3.5 w-3.5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                            ) : (
+                              "저장"
+                            )}
+                          </Button>
+                        </div>
+                      </form>
+                    ) : (
+                      <div className="flex flex-row items-center w-full relative">
+                        <a 
+                          href={link.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex flex-row items-center w-full outline-none"
+                        >
+                          {domain && (
+                            <div className="absolute left-0 flex items-center justify-center w-10 h-10 rounded-xl bg-white/10 border border-white/5 shadow-inner">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img 
+                                src={`https://s2.googleusercontent.com/s2/favicons?domain=${domain}&sz=64`} 
+                                alt="" 
+                                width={24} 
+                                height={24}
+                                className="rounded-sm drop-shadow-md transition-transform duration-300 group-hover:scale-110"
+                              />
+                            </div>
+                          )}
+                          
+                          <div className="flex-1 text-center font-semibold tracking-wide text-zinc-100 px-14 truncate">
+                            {link.title}
+                          </div>
+                        </a>
+
+                        {/* Action Buttons Container */}
+                        <div className="absolute right-0 flex items-center gap-1">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 rounded-full text-zinc-400 hover:text-indigo-400 hover:bg-white/10 transition-colors"
+                            onClick={(e) => { e.preventDefault(); handleEditClick(link); }}
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                            <span className="sr-only">수정</span>
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 rounded-full text-zinc-400 hover:text-red-400 hover:bg-white/10 transition-colors"
+                            onClick={(e) => { e.preventDefault(); setDeletingLink(link); }}
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                            <span className="sr-only">삭제</span>
+                          </Button>
+                        </div>
                       </div>
                     )}
-                    
-                    <div className="flex-1 text-center font-semibold tracking-wide text-zinc-100 pr-14">
-                      {link.title}
-                    </div>
-
-                    {/* Hover Arrow Icon */}
-                    <div className="absolute right-5 flex items-center justify-center text-zinc-500 transition-transform duration-300 group-hover:translate-x-1 group-hover:text-zinc-300">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                    </div>
                   </CardContent>
                 </Card>
-              </a>
+              </div>
             );
           })}
         </div>
