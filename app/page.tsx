@@ -20,6 +20,9 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useAuth } from "@/hooks/useAuth";
+import { signInWithGoogle, logout } from "@/lib/auth-service";
+import { toast } from "sonner";
 
 // Zod 스키마 정의
 const linkSchema = z.object({
@@ -34,8 +37,10 @@ const linkSchema = z.object({
 type LinkFormValues = z.infer<typeof linkSchema>;
 
 export default function Page() {
+  const { user, profile, loading } = useAuth();
   const [links, setLinks] = useState<Link[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   // 수정(Edit) 상태 및 React Hook Form
   const [editingLinkId, setEditingLinkId] = useState<string | null>(null);
@@ -58,8 +63,13 @@ export default function Page() {
 
   useEffect(() => {
     const fetchLinks = async () => {
+      if (!user) {
+        setLinks([]);
+        return;
+      }
+      
       const q = query(
-        collection(db, "users", "anonymous", "links"),
+        collection(db, "users", user.uid, "links"),
         orderBy("createdAt", "desc")
       );
 
@@ -82,7 +92,7 @@ export default function Page() {
     };
 
     fetchLinks();
-  }, []);
+  }, [user]);
 
   // React Hook Form 설정
   const {
@@ -99,8 +109,9 @@ export default function Page() {
   });
 
   const onSubmit = async (data: LinkFormValues) => {
+    if (!user) return;
     try {
-      const linksRef = collection(db, "users", "anonymous", "links");
+      const linksRef = collection(db, "users", user.uid, "links");
       const docRef = await addDoc(linksRef, {
         title: data.title,
         url: data.url,
@@ -121,7 +132,7 @@ export default function Page() {
       reset(); // 폼 초기화
     } catch (error) {
       console.error("Error adding document: ", error);
-      alert("링크 추가 중 오류가 발생했습니다.");
+      toast.error("링크 추가 중 오류가 발생했습니다.");
     }
   };
 
@@ -143,8 +154,9 @@ export default function Page() {
   };
 
   const onEditSubmit = async (data: LinkFormValues, id: string) => {
+    if (!user) return;
     try {
-      const linkRef = doc(db, "users", "anonymous", "links", id);
+      const linkRef = doc(db, "users", user.uid, "links", id);
       await updateDoc(linkRef, {
         title: data.title,
         url: data.url,
@@ -162,49 +174,206 @@ export default function Page() {
       resetEdit({ title: "", url: "" });
     } catch (error) {
       console.error("Error updating document: ", error);
-      alert("링크 수정 중 오류가 발생했습니다.");
+      toast.error("링크 수정 중 오류가 발생했습니다.");
     }
   };
 
   const handleDeleteConfirm = async () => {
-    if (!deletingLink) return;
+    if (!deletingLink || !user) return;
     setIsDeleting(true);
     try {
-      const linkRef = doc(db, "users", "anonymous", "links", deletingLink.id);
+      const linkRef = doc(db, "users", user.uid, "links", deletingLink.id);
       await deleteDoc(linkRef);
       setLinks((prev) => prev.filter((link) => link.id !== deletingLink.id));
       setDeletingLink(null);
     } catch (error) {
       console.error("Error deleting document: ", error);
-      alert("링크 삭제 중 오류가 발생했습니다.");
+      toast.error("링크 삭제 중 오류가 발생했습니다.");
     } finally {
       setIsDeleting(false);
     }
   };
 
+  // 로딩 화면
+  if (loading) {
+    return (
+      <div className="relative min-h-svh w-full flex items-center justify-center bg-slate-950 text-white">
+        <svg className="animate-spin h-10 w-10 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+      </div>
+    );
+  }
+
+  // 뷰 1: 메인 방문 & 랜딩 화면 (로그아웃 상태)
+  if (!user) {
+    return (
+      <div className="relative min-h-svh w-full bg-slate-950 text-slate-50 flex flex-col items-center">
+        {/* Header */}
+        <header className="w-full flex items-center justify-between p-4 px-6 md:px-12 max-w-7xl mx-auto border-b border-slate-800">
+          <div className="font-extrabold text-xl tracking-tight text-purple-400">
+            MyLink
+          </div>
+          <Button 
+            className="bg-purple-500 hover:bg-purple-600 text-white font-semibold rounded-none px-6"
+            onClick={async () => {
+              try {
+                await signInWithGoogle();
+              } catch (e) {
+                toast.error("로그인에 실패했습니다.");
+              }
+            }}
+          >
+            로그인
+          </Button>
+        </header>
+
+        {/* Hero Section */}
+        <main className="flex-1 flex flex-col items-center justify-center w-full max-w-5xl px-6 py-12 gap-10">
+          <div className="flex flex-col items-center text-center space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+            <h1 className="text-5xl md:text-7xl font-black tracking-tight text-white leading-tight">
+              Development in <span className="text-purple-400">One<br/>Link.</span>
+            </h1>
+            <p className="text-base md:text-lg font-medium text-slate-400 leading-relaxed pt-2">
+              GitHub, 블로그, 포트폴리오까지.<br/>개발자를 위한 모든 링크를 한 페이지에 담아보세요.
+            </p>
+            <Button 
+              onClick={async () => {
+                try {
+                  await signInWithGoogle();
+                } catch (e) {
+                  toast.error("로그인에 실패했습니다.");
+                }
+              }}
+              className="h-12 px-10 mt-6 w-full sm:w-auto bg-purple-500 hover:bg-purple-600 text-white font-medium text-sm md:text-base rounded-sm flex items-center justify-center gap-2 transition-all shadow-md shadow-purple-500/20"
+            >
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#ffffff"/>
+                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#ffffff"/>
+                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#ffffff"/>
+                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#ffffff"/>
+              </svg>
+              Google로 시작하기
+            </Button>
+          </div>
+
+          {/* Mockup Card */}
+          <div className="relative mt-8 w-full max-w-[480px] animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-200">
+            {/* The tilted card */}
+            <div className="bg-slate-900 rounded-2xl p-6 pb-8 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] transform -rotate-[2deg] hover:rotate-0 transition-transform duration-500 border border-slate-800 mx-auto w-11/12 sm:w-full">
+              {/* Skeleton UI Header */}
+              <div className="flex items-center gap-4 mb-6 ml-2">
+                <div className="w-10 h-10 rounded-full bg-slate-800"></div>
+                <div className="space-y-2.5">
+                  <div className="h-3.5 w-28 bg-slate-700 rounded-sm"></div>
+                  <div className="h-2.5 w-40 bg-slate-800 rounded-sm"></div>
+                </div>
+              </div>
+              
+              {/* Skeleton UI Links */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-4 w-full h-14 bg-purple-900/20 rounded-xl p-4 border border-purple-500/20">
+                  <div className="w-5 h-5 rounded-full bg-purple-500/40"></div>
+                  <div className="h-2.5 w-full bg-purple-400/30 rounded-sm"></div>
+                </div>
+                <div className="flex items-center gap-4 w-full h-14 bg-slate-800/50 rounded-xl p-4 border border-slate-800">
+                  <div className="w-5 h-5 rounded-full bg-slate-700"></div>
+                  <div className="h-2.5 w-full bg-slate-700/50 rounded-sm"></div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Background decorative shadow */}
+            <div className="absolute -z-10 bottom-[-20px] left-1/2 -translate-x-1/2 w-[80%] h-[40px] bg-purple-600/20 blur-[30px] rounded-[100%]"></div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // 뷰 3: 마이페이지 (로그인 상태)
   return (
     <div className="relative min-h-svh w-full overflow-hidden bg-slate-950 text-slate-50 selection:bg-indigo-500/30">
+      {/* 마이페이지 헤더 */}
+      <header className="w-full flex items-center justify-between p-4 px-6 md:px-12 backdrop-blur-md bg-white/5 border-b border-white/10 z-20 sticky top-0">
+        <div className="font-bold text-lg tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-zinc-400">
+          MyLink 홈
+        </div>
+        <div className="relative">
+          <button 
+            onClick={() => setIsMenuOpen(!isMenuOpen)} 
+            className="flex items-center justify-center rounded-full hover:ring-2 hover:ring-white/20 transition-all focus:outline-none"
+          >
+            {profile?.avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={profile.avatarUrl} alt="profile" className="w-10 h-10 rounded-full object-cover border border-slate-700" />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center border border-slate-700">
+                <span className="text-sm font-mono text-slate-400">{profile?.username?.charAt(0).toUpperCase() || "M"}</span>
+              </div>
+            )}
+          </button>
+
+          {isMenuOpen && (
+            <>
+              <div className="fixed inset-0 z-30" onClick={() => setIsMenuOpen(false)} />
+              <div className="absolute right-0 mt-2 w-48 rounded-xl bg-slate-900 border border-slate-800 shadow-xl overflow-hidden z-40 py-1">
+                <button
+                  className="w-full text-left px-4 py-2.5 text-sm font-medium text-zinc-300 hover:text-white hover:bg-slate-800 transition-colors"
+                  onClick={() => {
+                    navigator.clipboard.writeText(`mylink.com/${profile?.nickname || ''}`);
+                    toast.success("내 URL이 복사되었습니다.");
+                    setIsMenuOpen(false);
+                  }}
+                >
+                  내 URL 복사
+                </button>
+                <div className="h-px bg-slate-800 mx-2" />
+                <button
+                  className="w-full text-left px-4 py-2.5 text-sm font-medium text-red-400 hover:text-red-300 hover:bg-red-900/20 transition-colors"
+                  onClick={() => {
+                    logout();
+                    setIsMenuOpen(false);
+                  }}
+                >
+                  로그아웃
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </header>
+
       {/* Dynamic Background Effects */}
-      <div className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden">
+      <div className="pointer-events-none fixed inset-0 flex items-center justify-center overflow-hidden z-0">
         <div className="absolute top-[-10%] left-[-10%] h-[500px] w-[500px] rounded-full bg-indigo-600/20 blur-[120px]" />
         <div className="absolute bottom-[-10%] right-[-10%] h-[600px] w-[600px] rounded-full bg-fuchsia-600/20 blur-[150px]" />
       </div>
 
       <div className="relative z-10 flex min-h-svh flex-col items-center p-6 sm:p-12">
         {/* Profile Section */}
-        <div className="mt-12 mb-12 flex flex-col items-center gap-5 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+        <div className="mt-4 mb-12 flex flex-col items-center gap-5 animate-in fade-in slide-in-from-bottom-8 duration-1000">
           <div className="relative group cursor-default">
             <div className="absolute -inset-0.5 rounded-full bg-gradient-to-r from-indigo-500 to-fuchsia-500 opacity-50 blur-md group-hover:opacity-100 transition duration-500"></div>
             <div className="relative h-28 w-28 rounded-full bg-zinc-900 overflow-hidden border-2 border-zinc-800 shadow-2xl flex items-center justify-center">
-              <span className="text-4xl font-mono text-zinc-500">M</span>
+              {profile?.avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={profile.avatarUrl} alt="profile" className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-4xl font-mono text-zinc-500">{profile?.username?.charAt(0).toUpperCase() || "M"}</span>
+              )}
             </div>
           </div>
-          <div className="text-center space-y-2">
-            <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl bg-clip-text text-transparent bg-gradient-to-r from-white to-zinc-400">
-              @MyLink
+          <div className="text-center space-y-2 group">
+            <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl bg-clip-text text-transparent bg-gradient-to-r from-white to-zinc-400 flex items-center justify-center gap-2">
+              {profile?.username || "유저네임"}
             </h1>
-            <p className="text-sm font-medium text-zinc-400 max-w-[280px] leading-relaxed">
-              코드를 예술로, 아이디어를 현실로 만드는 크리에이터입니다.
+            <p className="text-sm font-medium text-zinc-500">
+              mylink.com/{profile?.nickname || "nickname"}
+            </p>
+            <p className="text-sm font-medium text-zinc-400 max-w-[280px] leading-relaxed mt-2 flex items-center justify-center gap-1">
+              {profile?.bio || "소개글이 없습니다."}
             </p>
           </div>
         </div>
