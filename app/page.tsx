@@ -198,7 +198,7 @@ export default function Page() {
   if (loading) {
     return (
       <div className="relative min-h-svh w-full flex items-center justify-center bg-slate-950 text-white">
-        <svg className="animate-spin h-10 w-10 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <svg className="animate-spin h-10 w-10 text-purple-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
@@ -212,11 +212,11 @@ export default function Page() {
       <div className="relative min-h-svh w-full bg-slate-950 text-slate-50 flex flex-col items-center">
         {/* Header */}
         <header className="w-full flex items-center justify-between p-4 px-6 md:px-12 max-w-7xl mx-auto border-b border-slate-800">
-          <div className="font-extrabold text-xl tracking-tight text-purple-400">
+          <div className="font-extrabold text-xl tracking-tight text-purple-500">
             MyLink
           </div>
           <Button 
-            className="bg-purple-500 hover:bg-purple-600 text-white font-semibold rounded-none px-6"
+            className="bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-none px-6"
             onClick={async () => {
               try {
                 await signInWithGoogle();
@@ -233,7 +233,7 @@ export default function Page() {
         <main className="flex-1 flex flex-col items-center justify-center w-full max-w-5xl px-6 py-12 gap-10">
           <div className="flex flex-col items-center text-center space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-1000">
             <h1 className="text-5xl md:text-7xl font-black tracking-tight text-white leading-tight">
-              Development in <span className="text-purple-400">One<br/>Link.</span>
+              Development in <span className="text-purple-500">One<br/>Link.</span>
             </h1>
             <p className="text-base md:text-lg font-medium text-slate-400 leading-relaxed pt-2">
               GitHub, 블로그, 포트폴리오까지.<br/>개발자를 위한 모든 링크를 한 페이지에 담아보세요.
@@ -246,7 +246,7 @@ export default function Page() {
                   toast.error("로그인에 실패했습니다.");
                 }
               }}
-              className="h-12 px-10 mt-6 w-full sm:w-auto bg-purple-500 hover:bg-purple-600 text-white font-medium text-sm md:text-base rounded-sm flex items-center justify-center gap-2 transition-all shadow-md shadow-purple-500/20"
+              className="h-12 px-10 mt-6 w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white font-medium text-sm md:text-base rounded-sm flex items-center justify-center gap-2 transition-all shadow-md shadow-purple-600/20"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#ffffff"/>
@@ -273,9 +273,9 @@ export default function Page() {
               
               {/* Skeleton UI Links */}
               <div className="space-y-3">
-                <div className="flex items-center gap-4 w-full h-14 bg-purple-900/20 rounded-xl p-4 border border-purple-500/20">
-                  <div className="w-5 h-5 rounded-full bg-purple-500/40"></div>
-                  <div className="h-2.5 w-full bg-purple-400/30 rounded-sm"></div>
+                <div className="flex items-center gap-4 w-full h-14 bg-purple-900/20 rounded-xl p-4 border border-purple-600/20">
+                  <div className="w-5 h-5 rounded-full bg-purple-600/40"></div>
+                  <div className="h-2.5 w-full bg-purple-500/30 rounded-sm"></div>
                 </div>
                 <div className="flex items-center gap-4 w-full h-14 bg-slate-800/50 rounded-xl p-4 border border-slate-800">
                   <div className="w-5 h-5 rounded-full bg-slate-700"></div>
@@ -285,7 +285,7 @@ export default function Page() {
             </div>
             
             {/* Background decorative shadow */}
-            <div className="absolute -z-10 bottom-[-20px] left-1/2 -translate-x-1/2 w-[80%] h-[40px] bg-purple-600/20 blur-[30px] rounded-[100%]"></div>
+            <div className="absolute -z-10 bottom-[-20px] left-1/2 -translate-x-1/2 w-[80%] h-[40px] bg-purple-700/20 blur-[30px] rounded-[100%]"></div>
           </div>
         </main>
       </div>
@@ -347,7 +347,7 @@ export default function Page() {
 
       {/* Dynamic Background Effects */}
       <div className="pointer-events-none fixed inset-0 flex items-center justify-center overflow-hidden z-0">
-        <div className="absolute top-[-10%] left-[-10%] h-[500px] w-[500px] rounded-full bg-indigo-600/20 blur-[120px]" />
+        <div className="absolute top-[-10%] left-[-10%] h-[500px] w-[500px] rounded-full bg-purple-700/20 blur-[120px]" />
         <div className="absolute bottom-[-10%] right-[-10%] h-[600px] w-[600px] rounded-full bg-fuchsia-600/20 blur-[150px]" />
       </div>
 
@@ -355,7 +355,7 @@ export default function Page() {
         {/* Profile Section */}
         <div className="mt-4 mb-12 flex flex-col items-center gap-5 animate-in fade-in slide-in-from-bottom-8 duration-1000">
           <div className="relative group cursor-default">
-            <div className="absolute -inset-0.5 rounded-full bg-gradient-to-r from-indigo-500 to-fuchsia-500 opacity-50 blur-md group-hover:opacity-100 transition duration-500"></div>
+            <div className="absolute -inset-0.5 rounded-full bg-gradient-to-r from-purple-600 to-fuchsia-500 opacity-50 blur-md group-hover:opacity-100 transition duration-500"></div>
             <div className="relative h-28 w-28 rounded-full bg-zinc-900 overflow-hidden border-2 border-zinc-800 shadow-2xl flex items-center justify-center">
               {profile?.avatarUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -385,7 +385,7 @@ export default function Page() {
             <DialogTrigger asChild>
               <Button 
                 variant="outline" 
-                className="group relative flex h-14 w-full items-center justify-center gap-2 rounded-2xl border-dashed border-white/20 bg-white/5 font-semibold text-zinc-300 transition-all hover:border-indigo-500/50 hover:bg-white/10 hover:text-white"
+                className="group relative flex h-14 w-full items-center justify-center gap-2 rounded-2xl border-dashed border-white/20 bg-white/5 font-semibold text-zinc-300 transition-all hover:border-purple-600/50 hover:bg-white/10 hover:text-white"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -418,7 +418,7 @@ export default function Page() {
                     <Input
                       id="title"
                       placeholder="예: 나의 깃허브"
-                      className={`border-white/10 bg-white/5 text-zinc-100 focus:border-indigo-500/50 ${errors.title ? "border-red-500/50 focus:border-red-500/50" : ""}`}
+                      className={`border-white/10 bg-white/5 text-zinc-100 focus:border-purple-600/50 ${errors.title ? "border-red-500/50 focus:border-red-500/50" : ""}`}
                       {...register("title")}
                     />
                     {errors.title && (
@@ -430,7 +430,7 @@ export default function Page() {
                     <Input
                       id="url"
                       placeholder="https://github.com/username"
-                      className={`border-white/10 bg-white/5 text-zinc-100 focus:border-indigo-500/50 ${errors.url ? "border-red-500/50 focus:border-red-500/50" : ""}`}
+                      className={`border-white/10 bg-white/5 text-zinc-100 focus:border-purple-600/50 ${errors.url ? "border-red-500/50 focus:border-red-500/50" : ""}`}
                       {...register("url")}
                     />
                     {errors.url && (
@@ -439,7 +439,7 @@ export default function Page() {
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button type="submit" disabled={isSubmitting} className="w-full bg-indigo-600 font-bold text-white hover:bg-indigo-500 disabled:opacity-50 flex items-center justify-center gap-2">
+                  <Button type="submit" disabled={isSubmitting} className="w-full bg-purple-600 font-bold text-white hover:bg-purple-700 disabled:opacity-50 flex items-center justify-center gap-2">
                     {isSubmitting && (
                       <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                     )}
@@ -491,11 +491,11 @@ export default function Page() {
                 className="group relative block w-full outline-none"
               >
                 {/* 1. Card 컨테이너 */}
-                <Card className={`relative overflow-hidden rounded-2xl bg-white/5 border border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.1)] backdrop-blur-md transition-all duration-300 py-0 gap-0 ${!isEditing ? "group-hover:bg-white/10 group-hover:border-white/20 group-hover:-translate-y-1 group-hover:shadow-[0_8px_40px_rgba(79,70,229,0.15)] group-focus-within:ring-2 group-focus-within:ring-indigo-500" : ""}`}>
+                <Card className={`relative overflow-hidden rounded-2xl bg-white/5 border border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.1)] backdrop-blur-md transition-all duration-300 py-0 gap-0 ${!isEditing ? "group-hover:bg-white/10 group-hover:border-white/20 group-hover:-translate-y-1 group-hover:shadow-[0_8px_40px_rgba(147,51,234,0.15)] group-focus-within:ring-2 group-focus-within:ring-purple-600" : ""}`}>
                   
                   {/* Subtle Gradient Hover Overlay */}
                   {!isEditing && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/0 via-indigo-500/0 to-fuchsia-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-purple-600/0 via-purple-600/0 to-fuchsia-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
                   )}
 
                   {/* 2. CardContent 컨테이너 */}
@@ -505,7 +505,7 @@ export default function Page() {
                         <div className="space-y-1">
                           <Input
                             placeholder="제목 (예: 나의 깃허브)"
-                            className={`h-10 border-white/10 bg-white/5 text-zinc-100 focus:border-indigo-500/50 ${editErrorsForm.title ? "border-red-500/50" : ""}`}
+                            className={`h-10 border-white/10 bg-white/5 text-zinc-100 focus:border-purple-600/50 ${editErrorsForm.title ? "border-red-500/50" : ""}`}
                             {...registerEdit("title")}
                           />
                           {editErrorsForm.title && <p className="text-[11px] font-medium text-red-400 pl-1">{editErrorsForm.title.message}</p>}
@@ -513,14 +513,14 @@ export default function Page() {
                         <div className="space-y-1">
                           <Input
                             placeholder="URL (https://...)"
-                            className={`h-10 border-white/10 bg-white/5 text-zinc-100 focus:border-indigo-500/50 ${editErrorsForm.url ? "border-red-500/50" : ""}`}
+                            className={`h-10 border-white/10 bg-white/5 text-zinc-100 focus:border-purple-600/50 ${editErrorsForm.url ? "border-red-500/50" : ""}`}
                             {...registerEdit("url")}
                           />
                           {editErrorsForm.url && <p className="text-[11px] font-medium text-red-400 pl-1">{editErrorsForm.url.message}</p>}
                         </div>
                         <div className="flex justify-end gap-2 mt-2">
                           <Button type="button" size="sm" variant="ghost" disabled={isEditSubmitting} onClick={handleEditCancel} className="h-9 px-4 text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/10 rounded-xl">취소</Button>
-                          <Button type="submit" size="sm" disabled={isEditSubmitting} className="h-9 px-4 text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl disabled:opacity-50 min-w-[60px] flex items-center justify-center">
+                          <Button type="submit" size="sm" disabled={isEditSubmitting} className="h-9 px-4 text-xs font-bold bg-purple-600 hover:bg-purple-700 text-white rounded-xl disabled:opacity-50 min-w-[60px] flex items-center justify-center">
                             {isEditSubmitting ? (
                               <svg className="animate-spin h-3.5 w-3.5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                             ) : (
@@ -560,7 +560,7 @@ export default function Page() {
                           <Button 
                             variant="ghost" 
                             size="icon" 
-                            className="h-8 w-8 rounded-full text-zinc-400 hover:text-indigo-400 hover:bg-white/10 transition-colors"
+                            className="h-8 w-8 rounded-full text-zinc-400 hover:text-purple-500 hover:bg-white/10 transition-colors"
                             onClick={(e) => { e.preventDefault(); handleEditClick(link); }}
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
