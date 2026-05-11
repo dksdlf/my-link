@@ -393,7 +393,15 @@ export default function Page() {
         <div className="font-bold text-lg tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-zinc-400">
           MyLink 홈
         </div>
-        <div className="relative">
+        <div className="flex items-center gap-4 relative">
+          <a
+            href={`/${profile?.nickname || ''}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden sm:block text-sm font-medium text-zinc-300 hover:text-white transition-colors bg-white/5 hover:bg-white/10 px-4 py-2 rounded-full border border-white/10"
+          >
+            내 페이지 보기
+          </a>
           <button 
             onClick={() => setIsMenuOpen(!isMenuOpen)} 
             className="flex items-center justify-center rounded-full hover:ring-2 hover:ring-white/20 transition-all focus:outline-none"
@@ -411,7 +419,16 @@ export default function Page() {
           {isMenuOpen && (
             <>
               <div className="fixed inset-0 z-30" onClick={() => setIsMenuOpen(false)} />
-              <div className="absolute right-0 mt-2 w-48 rounded-xl bg-slate-900 border border-slate-800 shadow-xl overflow-hidden z-40 py-1">
+              <div className="absolute right-0 top-full mt-2 w-48 rounded-xl bg-slate-900 border border-slate-800 shadow-xl overflow-hidden z-40 py-1">
+                <a
+                  href={`/${profile?.nickname || ''}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block w-full text-left px-4 py-2.5 text-sm font-medium text-zinc-300 hover:text-white hover:bg-slate-800 transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  내 페이지 보기
+                </a>
                 <button
                   className="w-full text-left px-4 py-2.5 text-sm font-medium text-zinc-300 hover:text-white hover:bg-slate-800 transition-colors"
                   onClick={() => {
