@@ -1,0 +1,37 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // 1. 유저 프로필 문서 (users/{userId})
+    match /users/{userId} {
+      // 읽기: 누구나 가능 (퍼블릭 프로필 페이지 접근을 위해 필요)
+      allow read: if true;
+      
+      // 쓰기(생성, 수정, 삭제): 로그인되어 있고 본인의 UID와 문서 ID가 일치할 때만
+      allow write: if request.auth != null && request.auth.uid == userId;
+      
+      // 2. 유저의 링크 목록 서브 컬렉션 (users/{userId}/links/{linkId})
+      match /links/{linkId} {
+        // 읽기: 누구나 가능
+        allow read: if true;
+        
+        // 쓰기: 로그인되어 있고 본인의 UID(상위 문서 ID)와 일치할 때만
+        allow write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+
+    // 3. 닉네임(URL) 중복 방지용 컬렉션 (추가 제안 기능)
+    // DB_SCHEMA.md에 정의된 닉네임 컬렉션에 대한 보안 규칙입니다.
+    match /nicknames/{nickname} {
+      // 닉네임 중복 여부를 누구나 확인해야 하므로 읽기 허용
+      allow read: if true;
+      
+      // 닉네임 점유(생성): 로그인되어 있고, 저장하려는 데이터의 uid가 본인의 uid일 때만 허용
+      allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
+      
+      // 닉네임 변경/삭제: 기존에 저장된(resource) 닉네임 데이터의 uid가 본인의 uid일 때만 허용
+      allow update, delete: if request.auth != null && resource.data.uid == request.auth.uid;
+    }
+  }
+}
