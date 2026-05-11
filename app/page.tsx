@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { type Link } from "@/data/links";
 import { db } from "@/lib/firebase";
-import { collection, addDoc, serverTimestamp, query, orderBy, getDocs, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, query, orderBy, getDocs, doc, updateDoc, deleteDoc, getDoc, writeBatch } from "firebase/firestore";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,7 +21,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth, UserProfile } from "@/hooks/useAuth";
 import { signInWithGoogle, logout } from "@/lib/auth-service";
 import { toast } from "sonner";
 
@@ -37,10 +38,156 @@ const linkSchema = z.object({
 type LinkFormValues = z.infer<typeof linkSchema>;
 
 export default function Page() {
-  const { user, profile, loading } = useAuth();
-  const [links, setLinks] = useState<Link[]>([]);
+  const { user, loading: authLoading } = useAuth();
+  const queryClient = useQueryClient();
+  
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  // TanStack Query: Profile
+  const { data: profile, isLoading: isProfileLoading } = useQuery({
+    queryKey: ["profile", user?.uid],
+    queryFn: async () => {
+      if (!user) return null;
+      const docSnap = await getDoc(doc(db, "users", user.uid));
+      return docSnap.exists() ? docSnap.data() as UserProfile : null;
+    },
+    enabled: !!user,
+  });
+
+  // TanStack Query: Links
+  const { data: links = [], isLoading: isLinksLoading } = useQuery({
+    queryKey: ["links", user?.uid],
+    queryFn: async () => {
+      if (!user) return [];
+      const q = query(
+        collection(db, "users", user.uid, "links"),
+        orderBy("createdAt", "desc")
+      );
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          title: data.title,
+          url: data.url,
+          createdAt: data.createdAt ? data.createdAt.toDate().toISOString() : new Date().toISOString(),
+          updatedAt: data.updatedAt ? data.updatedAt.toDate().toISOString() : new Date().toISOString(),
+        } as Link;
+      });
+    },
+    enabled: !!user,
+  });
+
+  // Mutations
+  const addLinkMutation = useMutation({
+    mutationFn: async (data: LinkFormValues) => {
+      if (!user) throw new Error("Not logged in");
+      const linksRef = collection(db, "users", user.uid, "links");
+      await addDoc(linksRef, {
+        title: data.title,
+        url: data.url,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["links", user?.uid] });
+      setIsDialogOpen(false);
+      reset();
+      toast.success("링크가 추가되었습니다.");
+    },
+    onError: (error) => {
+      console.error("Error adding document: ", error);
+      toast.error("링크 추가 중 오류가 발생했습니다.");
+    }
+  });
+
+  const updateLinkMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string, data: LinkFormValues }) => {
+      if (!user) throw new Error("Not logged in");
+      const linkRef = doc(db, "users", user.uid, "links", id);
+      await updateDoc(linkRef, {
+        title: data.title,
+        url: data.url,
+        updatedAt: serverTimestamp(),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["links", user?.uid] });
+      setEditingLinkId(null);
+      resetEdit({ title: "", url: "" });
+      toast.success("링크가 수정되었습니다.");
+    },
+    onError: (error) => {
+      console.error("Error updating document: ", error);
+      toast.error("링크 수정 중 오류가 발생했습니다.");
+    }
+  });
+
+  const deleteLinkMutation = useMutation({
+    mutationFn: async (id: string) => {
+      if (!user) throw new Error("Not logged in");
+      const linkRef = doc(db, "users", user.uid, "links", id);
+      await deleteDoc(linkRef);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["links", user?.uid] });
+      setDeletingLink(null);
+      toast.success("링크가 삭제되었습니다.");
+    },
+    onError: (error) => {
+      console.error("Error deleting document: ", error);
+      toast.error("링크 삭제 중 오류가 발생했습니다.");
+    }
+  });
+
+  const updateProfileMutation = useMutation({
+    mutationFn: async ({ field, newValue, oldValue }: { field: "username" | "nickname" | "bio", newValue: string, oldValue: string }) => {
+      if (!user) throw new Error("Not logged in");
+      if (field === "nickname") {
+        const newNicknameRef = doc(db, "nicknames", newValue);
+        const newNicknameSnap = await getDoc(newNicknameRef);
+
+        if (newNicknameSnap.exists()) {
+          throw new Error("ALREADY_EXISTS");
+        }
+
+        const batch = writeBatch(db);
+        const userRef = doc(db, "users", user.uid);
+        const oldNicknameRef = doc(db, "nicknames", oldValue);
+
+        batch.set(newNicknameRef, { uid: user.uid, createdAt: serverTimestamp() });
+        batch.update(userRef, { nickname: newValue, updatedAt: serverTimestamp() });
+        batch.delete(oldNicknameRef);
+
+        await batch.commit();
+        return field;
+      } else {
+        const userRef = doc(db, "users", user.uid);
+        await updateDoc(userRef, {
+          [field]: newValue,
+          updatedAt: serverTimestamp(),
+        });
+        return field;
+      }
+    },
+    onSuccess: (field) => {
+      queryClient.invalidateQueries({ queryKey: ["profile", user?.uid] });
+      setEditingProfileField(null);
+      if (field === "nickname") toast.success("닉네임이 변경되었습니다.");
+      else if (field === "username") toast.success("유저네임이 변경되었습니다.");
+      else toast.success("소개글이 변경되었습니다.");
+    },
+    onError: (error: any) => {
+      if (error.message === "ALREADY_EXISTS") {
+        toast.error("이미 사용 중인 닉네임입니다.");
+      } else {
+        console.error("Error updating profile:", error);
+        toast.error("프로필 수정 중 오류가 발생했습니다.");
+      }
+    }
+  });
 
   // 수정(Edit) 상태 및 React Hook Form
   const [editingLinkId, setEditingLinkId] = useState<string | null>(null);
@@ -48,7 +195,7 @@ export default function Page() {
     register: registerEdit,
     handleSubmit: handleSubmitEdit,
     reset: resetEdit,
-    formState: { errors: editErrorsForm, isSubmitting: isEditSubmitting },
+    formState: { errors: editErrorsForm },
   } = useForm<LinkFormValues>({
     resolver: zodResolver(linkSchema),
     defaultValues: {
@@ -59,47 +206,49 @@ export default function Page() {
 
   // 삭제(Delete) 상태
   const [deletingLink, setDeletingLink] = useState<Link | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
 
-  useEffect(() => {
-    const fetchLinks = async () => {
-      if (!user) {
-        setLinks([]);
+  // Profile Edit State
+  const [editingProfileField, setEditingProfileField] = useState<"username" | "nickname" | "bio" | null>(null);
+  const [profileFormData, setProfileFormData] = useState({ username: "", nickname: "", bio: "" });
+
+  const handleProfileEditStart = (field: "username" | "nickname" | "bio", currentValue: string) => {
+    setProfileFormData(prev => ({ ...prev, [field]: currentValue }));
+    setEditingProfileField(field);
+  };
+
+  const handleProfileSave = (field: "username" | "nickname" | "bio") => {
+    if (!user || !profile) return;
+    const newValue = profileFormData[field].trim();
+    const oldValue = profile[field];
+
+    if (newValue === oldValue) {
+      setEditingProfileField(null);
+      return;
+    }
+
+    if (field !== "bio" && newValue === "") {
+      toast.error(field === "username" ? "유저네임을 입력해주세요." : "닉네임을 입력해주세요.");
+      setEditingProfileField(null);
+      return;
+    }
+
+    if (field === "nickname") {
+      const nicknameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+      if (!nicknameRegex.test(newValue)) {
+        toast.error("닉네임은 3~20자의 영문, 숫자, 밑줄(_)만 가능합니다.");
         return;
       }
-      
-      const q = query(
-        collection(db, "users", user.uid, "links"),
-        orderBy("createdAt", "desc")
-      );
+    }
 
-      try {
-        const querySnapshot = await getDocs(q);
-        const fetchedLinks: Link[] = querySnapshot.docs.map(doc => {
-          const data = doc.data();
-          return {
-            id: doc.id,
-            title: data.title,
-            url: data.url,
-            createdAt: data.createdAt ? data.createdAt.toDate().toISOString() : new Date().toISOString(),
-            updatedAt: data.updatedAt ? data.updatedAt.toDate().toISOString() : new Date().toISOString(),
-          };
-        });
-        setLinks(fetchedLinks);
-      } catch (error) {
-        console.error("Error fetching links: ", error);
-      }
-    };
+    updateProfileMutation.mutate({ field, newValue, oldValue });
+  };
 
-    fetchLinks();
-  }, [user]);
-
-  // React Hook Form 설정
+  // React Hook Form 설정 (Add Link)
   const {
     register,
     handleSubmit,
     reset,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<LinkFormValues>({
     resolver: zodResolver(linkSchema),
     defaultValues: {
@@ -108,38 +257,14 @@ export default function Page() {
     },
   });
 
-  const onSubmit = async (data: LinkFormValues) => {
-    if (!user) return;
-    try {
-      const linksRef = collection(db, "users", user.uid, "links");
-      const docRef = await addDoc(linksRef, {
-        title: data.title,
-        url: data.url,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      });
-
-      const newLink: Link = {
-        id: docRef.id,
-        title: data.title,
-        url: data.url,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-
-      setLinks((prev) => [newLink, ...prev]);
-      setIsDialogOpen(false);
-      reset(); // 폼 초기화
-    } catch (error) {
-      console.error("Error adding document: ", error);
-      toast.error("링크 추가 중 오류가 발생했습니다.");
-    }
+  const onSubmit = (data: LinkFormValues) => {
+    addLinkMutation.mutate(data);
   };
 
   const handleOpenChange = (open: boolean) => {
     setIsDialogOpen(open);
     if (!open) {
-      reset(); // 다이얼로그가 닫힐 때 폼과 오류 메시지 초기화
+      reset(); 
     }
   };
 
@@ -153,49 +278,17 @@ export default function Page() {
     resetEdit({ title: "", url: "" });
   };
 
-  const onEditSubmit = async (data: LinkFormValues, id: string) => {
-    if (!user) return;
-    try {
-      const linkRef = doc(db, "users", user.uid, "links", id);
-      await updateDoc(linkRef, {
-        title: data.title,
-        url: data.url,
-        updatedAt: serverTimestamp(),
-      });
-
-      setLinks((prev) =>
-        prev.map((link) =>
-          link.id === id
-            ? { ...link, title: data.title, url: data.url, updatedAt: new Date().toISOString() }
-            : link
-        )
-      );
-      setEditingLinkId(null);
-      resetEdit({ title: "", url: "" });
-    } catch (error) {
-      console.error("Error updating document: ", error);
-      toast.error("링크 수정 중 오류가 발생했습니다.");
-    }
+  const onEditSubmit = (data: LinkFormValues, id: string) => {
+    updateLinkMutation.mutate({ id, data });
   };
 
-  const handleDeleteConfirm = async () => {
-    if (!deletingLink || !user) return;
-    setIsDeleting(true);
-    try {
-      const linkRef = doc(db, "users", user.uid, "links", deletingLink.id);
-      await deleteDoc(linkRef);
-      setLinks((prev) => prev.filter((link) => link.id !== deletingLink.id));
-      setDeletingLink(null);
-    } catch (error) {
-      console.error("Error deleting document: ", error);
-      toast.error("링크 삭제 중 오류가 발생했습니다.");
-    } finally {
-      setIsDeleting(false);
-    }
+  const handleDeleteConfirm = () => {
+    if (!deletingLink) return;
+    deleteLinkMutation.mutate(deletingLink.id);
   };
 
   // 로딩 화면
-  if (loading) {
+  if (authLoading || (user && isProfileLoading)) {
     return (
       <div className="relative min-h-svh w-full flex items-center justify-center bg-slate-950 text-white">
         <svg className="animate-spin h-10 w-10 text-purple-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -354,27 +447,122 @@ export default function Page() {
       <div className="relative z-10 flex min-h-svh flex-col items-center p-6 sm:p-12">
         {/* Profile Section */}
         <div className="mt-4 mb-12 flex flex-col items-center gap-5 animate-in fade-in slide-in-from-bottom-8 duration-1000">
-          <div className="relative group cursor-default">
+          <div className="relative group cursor-default mx-auto w-fit">
             <div className="absolute -inset-0.5 rounded-full bg-gradient-to-r from-purple-600 to-fuchsia-500 opacity-50 blur-md group-hover:opacity-100 transition duration-500"></div>
-            <div className="relative h-28 w-28 rounded-full bg-zinc-900 overflow-hidden border-2 border-zinc-800 shadow-2xl flex items-center justify-center">
+            <div className="relative h-28 w-28 rounded-full bg-zinc-900 overflow-hidden border-2 border-zinc-800 shadow-2xl">
               {profile?.avatarUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={profile.avatarUrl} alt="profile" className="w-full h-full object-cover" />
+                <img src={profile.avatarUrl} alt="profile" className="w-full h-full object-cover object-center block" />
               ) : (
-                <span className="text-4xl font-mono text-zinc-500">{profile?.username?.charAt(0).toUpperCase() || "M"}</span>
+                <div className="w-full h-full flex items-center justify-center">
+                  <span className="text-4xl font-mono text-zinc-500">{profile?.username?.charAt(0).toUpperCase() || "M"}</span>
+                </div>
               )}
             </div>
           </div>
-          <div className="text-center space-y-2 group">
-            <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl bg-clip-text text-transparent bg-gradient-to-r from-white to-zinc-400 flex items-center justify-center gap-2">
-              {profile?.username || "유저네임"}
-            </h1>
-            <p className="text-sm font-medium text-zinc-500">
-              mylink.com/{profile?.nickname || "nickname"}
-            </p>
-            <p className="text-sm font-medium text-zinc-400 max-w-[280px] leading-relaxed mt-2 flex items-center justify-center gap-1">
-              {profile?.bio || "소개글이 없습니다."}
-            </p>
+          <div className="text-center space-y-2">
+            {editingProfileField === "username" ? (
+              <div className="flex justify-center relative">
+                <Input
+                  autoFocus
+                  value={profileFormData.username}
+                  onChange={(e) => setProfileFormData({ ...profileFormData, username: e.target.value })}
+                  onBlur={() => handleProfileSave("username")}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      e.currentTarget.blur();
+                    } else if (e.key === "Escape") {
+                      setEditingProfileField(null);
+                    }
+                  }}
+                  disabled={updateProfileMutation.isPending}
+                  className="h-10 text-2xl font-extrabold tracking-tight sm:text-3xl text-center bg-transparent border-b-2 border-purple-500 rounded-none focus-visible:ring-0 px-2 py-1 min-w-[200px]"
+                />
+                {updateProfileMutation.isPending && editingProfileField === "username" && (
+                  <div className="absolute -right-8 top-1/2 -translate-y-1/2">
+                    <svg className="animate-spin h-5 w-5 text-purple-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <h1 
+                onClick={() => handleProfileEditStart("username", profile?.username || "")}
+                className="group relative text-2xl font-extrabold tracking-tight sm:text-3xl bg-clip-text text-transparent bg-gradient-to-r from-white to-zinc-400 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity w-fit mx-auto"
+              >
+                {profile?.username || "유저네임"}
+                <span className="absolute -right-6 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 text-sm text-purple-500 transition-opacity">✎</span>
+              </h1>
+            )}
+
+            {editingProfileField === "nickname" ? (
+              <div className="flex items-center justify-center text-sm font-medium text-zinc-500 relative w-fit mx-auto">
+                <span>mylink.com/</span>
+                <Input
+                  autoFocus
+                  value={profileFormData.nickname}
+                  onChange={(e) => setProfileFormData({ ...profileFormData, nickname: e.target.value.toLowerCase() })}
+                  onBlur={() => handleProfileSave("nickname")}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      e.currentTarget.blur();
+                    } else if (e.key === "Escape") {
+                      setEditingProfileField(null);
+                    }
+                  }}
+                  disabled={updateProfileMutation.isPending}
+                  className="h-6 text-sm font-medium p-0 bg-transparent border-b border-purple-500 rounded-none focus-visible:ring-0 w-[120px] text-zinc-300 ml-0.5"
+                />
+                {updateProfileMutation.isPending && editingProfileField === "nickname" && (
+                  <div className="absolute -right-6 top-1/2 -translate-y-1/2">
+                    <svg className="animate-spin h-4 w-4 text-purple-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p 
+                onClick={() => handleProfileEditStart("nickname", profile?.nickname || "")}
+                className="group relative text-sm font-medium text-zinc-500 cursor-pointer hover:text-zinc-300 transition-colors flex items-center justify-center w-fit mx-auto"
+              >
+                mylink.com/{profile?.nickname || "nickname"}
+                <span className="absolute -right-5 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 text-xs text-purple-500 transition-opacity">✎</span>
+              </p>
+            )}
+
+            {editingProfileField === "bio" ? (
+              <div className="flex justify-center relative mt-2 w-fit mx-auto">
+                <Input
+                  autoFocus
+                  value={profileFormData.bio}
+                  onChange={(e) => setProfileFormData({ ...profileFormData, bio: e.target.value })}
+                  onBlur={() => handleProfileSave("bio")}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      e.currentTarget.blur();
+                    } else if (e.key === "Escape") {
+                      setEditingProfileField(null);
+                    }
+                  }}
+                  disabled={updateProfileMutation.isPending}
+                  className="h-8 text-sm font-medium text-center bg-transparent border-b border-purple-500 rounded-none focus-visible:ring-0 px-2 py-1 min-w-[280px] text-zinc-300"
+                />
+                {updateProfileMutation.isPending && editingProfileField === "bio" && (
+                  <div className="absolute -right-6 top-1/2 -translate-y-1/2">
+                    <svg className="animate-spin h-4 w-4 text-purple-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p 
+                onClick={() => handleProfileEditStart("bio", profile?.bio || "")}
+                className="group relative text-sm font-medium text-zinc-400 max-w-[280px] leading-relaxed mt-2 mx-auto flex items-center justify-center text-center cursor-pointer hover:text-zinc-300 transition-colors w-fit"
+              >
+                {profile?.bio || "소개글이 없습니다."}
+                <span className="absolute -right-5 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 text-xs text-purple-500 transition-opacity">✎</span>
+              </p>
+            )}
           </div>
         </div>
 
@@ -439,11 +627,11 @@ export default function Page() {
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button type="submit" disabled={isSubmitting} className="w-full bg-purple-600 font-bold text-white hover:bg-purple-700 disabled:opacity-50 flex items-center justify-center gap-2">
-                    {isSubmitting && (
+                  <Button type="submit" disabled={addLinkMutation.isPending} className="w-full bg-purple-600 font-bold text-white hover:bg-purple-700 disabled:opacity-50 flex items-center justify-center gap-2">
+                    {addLinkMutation.isPending && (
                       <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                     )}
-                    {isSubmitting ? "추가 중..." : "추가 완료"}
+                    {addLinkMutation.isPending ? "추가 중..." : "추가 완료"}
                   </Button>
                 </DialogFooter>
               </form>
@@ -461,11 +649,11 @@ export default function Page() {
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter className="mt-4 gap-2 sm:gap-0">
-                <Button variant="outline" disabled={isDeleting} onClick={() => setDeletingLink(null)} className="border-white/10 bg-transparent text-zinc-300 hover:bg-white/5 hover:text-white">
+                <Button variant="outline" disabled={deleteLinkMutation.isPending} onClick={() => setDeletingLink(null)} className="border-white/10 bg-transparent text-zinc-300 hover:bg-white/5 hover:text-white">
                   취소
                 </Button>
-                <Button variant="destructive" disabled={isDeleting} onClick={handleDeleteConfirm} className="bg-red-600 hover:bg-red-700 text-white font-bold disabled:opacity-50 min-w-[80px] flex items-center justify-center">
-                  {isDeleting ? (
+                <Button variant="destructive" disabled={deleteLinkMutation.isPending} onClick={handleDeleteConfirm} className="bg-red-600 hover:bg-red-700 text-white font-bold disabled:opacity-50 min-w-[80px] flex items-center justify-center">
+                  {deleteLinkMutation.isPending ? (
                     <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                   ) : (
                     "삭제하기"
@@ -475,7 +663,11 @@ export default function Page() {
             </DialogContent>
           </Dialog>
 
-          {links.map((link) => {
+          {isLinksLoading ? (
+            <div className="flex justify-center py-10">
+               <svg className="animate-spin h-8 w-8 text-purple-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            </div>
+          ) : links.map((link) => {
             let domain = "";
             try {
               domain = new URL(link.url).hostname;
@@ -519,9 +711,9 @@ export default function Page() {
                           {editErrorsForm.url && <p className="text-[11px] font-medium text-red-400 pl-1">{editErrorsForm.url.message}</p>}
                         </div>
                         <div className="flex justify-end gap-2 mt-2">
-                          <Button type="button" size="sm" variant="ghost" disabled={isEditSubmitting} onClick={handleEditCancel} className="h-9 px-4 text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/10 rounded-xl">취소</Button>
-                          <Button type="submit" size="sm" disabled={isEditSubmitting} className="h-9 px-4 text-xs font-bold bg-purple-600 hover:bg-purple-700 text-white rounded-xl disabled:opacity-50 min-w-[60px] flex items-center justify-center">
-                            {isEditSubmitting ? (
+                          <Button type="button" size="sm" variant="ghost" disabled={updateLinkMutation.isPending} onClick={handleEditCancel} className="h-9 px-4 text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/10 rounded-xl">취소</Button>
+                          <Button type="submit" size="sm" disabled={updateLinkMutation.isPending} className="h-9 px-4 text-xs font-bold bg-purple-600 hover:bg-purple-700 text-white rounded-xl disabled:opacity-50 min-w-[60px] flex items-center justify-center">
+                            {updateLinkMutation.isPending ? (
                               <svg className="animate-spin h-3.5 w-3.5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                             ) : (
                               "저장"
