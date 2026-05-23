@@ -304,14 +304,20 @@ export default function Page() {
   // 뷰 1: 메인 방문 & 랜딩 화면 (로그아웃 상태)
   if (!user) {
     return (
-      <div className="relative min-h-svh w-full bg-slate-950 text-slate-50 flex flex-col items-center">
+      <div className="relative w-full bg-slate-950 text-slate-50 flex flex-col items-center overflow-x-hidden selection:bg-purple-500/30">
+        {/* Dynamic Background Effects for Landing */}
+        <div className="pointer-events-none fixed inset-0 flex items-center justify-center overflow-hidden z-0">
+          <div className="absolute top-[-10%] left-[-10%] h-[500px] w-[500px] rounded-full bg-purple-700/10 blur-[120px]" />
+          <div className="absolute bottom-[-10%] right-[-10%] h-[600px] w-[600px] rounded-full bg-fuchsia-600/10 blur-[150px]" />
+        </div>
+
         {/* Header */}
-        <header className="w-full flex items-center justify-between p-4 px-6 md:px-12 max-w-7xl mx-auto border-b border-slate-800">
-          <NextLink href="/" className="font-extrabold text-xl tracking-tight text-purple-500">
+        <header className="w-full flex items-center justify-between p-4 px-6 md:px-12 max-w-7xl mx-auto border-b border-white/5 backdrop-blur-md sticky top-0 z-50">
+          <NextLink href="/" className="font-extrabold text-xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-zinc-400">
             MyLink
           </NextLink>
           <Button 
-            className="bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-none px-6"
+            className="bg-white/10 hover:bg-white/20 text-white font-semibold rounded-full px-6 backdrop-blur-sm border border-white/10 transition-all"
             onClick={async () => {
               try {
                 await signInWithGoogle();
@@ -325,13 +331,13 @@ export default function Page() {
         </header>
 
         {/* Hero Section */}
-        <main className="flex-1 flex flex-col items-center justify-center w-full max-w-5xl px-6 py-12 gap-10">
+        <section className="relative z-10 flex flex-col items-center justify-center w-full max-w-5xl px-6 py-20 md:py-32 gap-12 min-h-[90vh]">
           <div className="flex flex-col items-center text-center space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-1000">
             <h1 className="text-5xl md:text-7xl font-black tracking-tight text-white leading-tight">
-              Development in <span className="text-purple-500">One<br/>Link.</span>
+              Development in <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-500 to-fuchsia-500">One<br/>Link.</span>
             </h1>
-            <p className="text-base md:text-lg font-medium text-slate-400 leading-relaxed pt-2">
-              GitHub, 블로그, 포트폴리오까지.<br/>개발자를 위한 모든 링크를 한 페이지에 담아보세요.
+            <p className="text-base md:text-lg font-medium text-slate-400 leading-relaxed pt-2 max-w-lg">
+              GitHub, 블로그, 포트폴리오까지.<br/>개발자를 위한 모든 링크를 단 하나의 페이지에 담아보세요.
             </p>
             <Button 
               onClick={async () => {
@@ -341,48 +347,191 @@ export default function Page() {
                   toast.error("로그인에 실패했습니다.");
                 }
               }}
-              className="h-12 px-10 mt-6 w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white font-medium text-sm md:text-base rounded-sm flex items-center justify-center gap-2 transition-all shadow-md shadow-purple-600/20"
+              className="h-14 px-10 mt-6 w-full sm:w-auto bg-white text-purple-900 hover:bg-zinc-200 font-bold text-base rounded-full flex items-center justify-center gap-2 transition-all shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] hover:shadow-[0_0_60px_-15px_rgba(255,255,255,0.5)] hover:-translate-y-1"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#ffffff"/>
-                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#ffffff"/>
-                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#ffffff"/>
-                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#ffffff"/>
+                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="currentColor"/>
+                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="currentColor"/>
+                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="currentColor"/>
+                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="currentColor"/>
               </svg>
-              Google로 시작하기
+              Google로 3초만에 시작하기
             </Button>
           </div>
 
-          {/* Mockup Card */}
-          <div className="relative mt-8 w-full max-w-[480px] animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-200">
-            {/* The tilted card */}
-            <div className="bg-slate-900 rounded-2xl p-6 pb-8 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] transform -rotate-[2deg] hover:rotate-0 transition-transform duration-500 border border-slate-800 mx-auto w-11/12 sm:w-full">
-              {/* Skeleton UI Header */}
-              <div className="flex items-center gap-4 mb-6 ml-2">
-                <div className="w-10 h-10 rounded-full bg-slate-800"></div>
-                <div className="space-y-2.5">
-                  <div className="h-3.5 w-28 bg-slate-700 rounded-sm"></div>
-                  <div className="h-2.5 w-40 bg-slate-800 rounded-sm"></div>
+          {/* Interactive Mockup Card */}
+          <div className="relative mt-12 w-full max-w-[420px] animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-300 group" style={{ perspective: '1000px' }}>
+            <div className="relative bg-white/5 backdrop-blur-xl rounded-3xl p-6 pb-8 shadow-[0_30px_80px_-20px_rgba(147,51,234,0.3)] border border-white/10 mx-auto w-11/12 sm:w-full transition-all duration-500 transform-gpu group-hover:rotate-x-[2deg] group-hover:-rotate-y-[5deg] group-hover:scale-[1.02]" style={{ transformStyle: 'preserve-3d' }}>
+              {/* Glowing inner border */}
+              <div className="absolute inset-0 rounded-3xl border border-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+              
+              {/* Profile Mockup */}
+              <div className="flex flex-col items-center gap-4 mb-8 mt-2 relative">
+                <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-purple-600 to-fuchsia-500 p-[2px] relative z-10 group/tooltip">
+                  <div className="w-full h-full rounded-full bg-slate-900 border-2 border-slate-900"></div>
+                  {/* Tooltip */}
+                  <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-white text-zinc-900 text-xs font-bold px-3 py-1.5 rounded-lg opacity-0 group-hover/tooltip:opacity-100 group-hover/tooltip:-translate-y-1 transition-all duration-300 whitespace-nowrap shadow-xl pointer-events-none">
+                    커스텀 프로필 이미지
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-white rotate-45"></div>
+                  </div>
+                </div>
+                <div className="space-y-2 flex flex-col items-center group/tooltip2 relative">
+                  <div className="h-5 w-32 bg-white/20 rounded-md"></div>
+                  <div className="h-3 w-48 bg-white/10 rounded-md"></div>
+                  <div className="absolute -right-24 top-1/2 -translate-y-1/2 bg-purple-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg opacity-0 group-hover/tooltip2:opacity-100 group-hover/tooltip2:translate-x-1 transition-all duration-300 whitespace-nowrap shadow-xl pointer-events-none hidden sm:block">
+                    클릭해서 바로 수정 ✍️
+                    <div className="absolute top-1/2 -left-1 -translate-y-1/2 w-2 h-2 bg-purple-600 rotate-45"></div>
+                  </div>
                 </div>
               </div>
               
-              {/* Skeleton UI Links */}
-              <div className="space-y-3">
-                <div className="flex items-center gap-4 w-full h-14 bg-purple-900/20 rounded-xl p-4 border border-purple-600/20">
-                  <div className="w-5 h-5 rounded-full bg-purple-600/40"></div>
-                  <div className="h-2.5 w-full bg-purple-500/30 rounded-sm"></div>
+              {/* Links Mockup */}
+              <div className="space-y-4 relative z-10">
+                <div className="group/link flex items-center gap-4 w-full h-16 bg-white/5 hover:bg-white/10 transition-colors rounded-2xl p-4 border border-white/10 relative cursor-default">
+                  <div className="w-8 h-8 rounded-full bg-white/20"></div>
+                  <div className="h-3 w-3/4 bg-white/20 rounded-sm"></div>
+                  <div className="absolute -right-2 top-1/2 -translate-y-1/2 translate-x-full bg-white/10 backdrop-blur-md text-white text-xs font-medium px-3 py-2 rounded-xl opacity-0 group-hover/link:opacity-100 group-hover/link:translate-x-4 transition-all duration-300 whitespace-nowrap border border-white/10 hidden sm:block">
+                    자동 파비콘 수집 🌐
+                  </div>
                 </div>
-                <div className="flex items-center gap-4 w-full h-14 bg-slate-800/50 rounded-xl p-4 border border-slate-800">
-                  <div className="w-5 h-5 rounded-full bg-slate-700"></div>
-                  <div className="h-2.5 w-full bg-slate-700/50 rounded-sm"></div>
+                <div className="group/link2 flex items-center gap-4 w-full h-16 bg-white/5 hover:bg-white/10 transition-colors rounded-2xl p-4 border border-white/10 relative cursor-default">
+                  <div className="w-8 h-8 rounded-full bg-white/10"></div>
+                  <div className="h-3 w-1/2 bg-white/10 rounded-sm"></div>
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover/link2:opacity-100 transition-opacity duration-300 text-purple-400 text-xs font-bold">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                    1.2k
+                  </div>
+                </div>
+                <div className="group/link3 flex items-center justify-center w-full h-16 bg-purple-600/20 hover:bg-purple-600/30 transition-colors rounded-2xl border border-purple-500/30 border-dashed cursor-default">
+                   <div className="text-purple-400 font-semibold text-sm group-hover/link3:scale-105 transition-transform">+ 새 링크 추가하기</div>
                 </div>
               </div>
             </div>
             
-            {/* Background decorative shadow */}
-            <div className="absolute -z-10 bottom-[-20px] left-1/2 -translate-x-1/2 w-[80%] h-[40px] bg-purple-700/20 blur-[30px] rounded-[100%]"></div>
+            {/* Background decorative shadows */}
+            <div className="absolute -z-10 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-purple-600/20 blur-[60px] rounded-full opacity-50 group-hover:opacity-80 transition-opacity duration-500"></div>
           </div>
-        </main>
+        </section>
+
+        {/* Feature Sections */}
+        <section className="w-full bg-slate-950/50 border-t border-white/5 relative z-10 py-24 sm:py-32">
+          <div className="max-w-6xl mx-auto px-6 space-y-32">
+            
+            {/* Feature 1 */}
+            <div className="flex flex-col md:flex-row items-center gap-12 md:gap-24 group/feat">
+              <div className="flex-1 space-y-6">
+                <div className="inline-flex items-center rounded-full border border-purple-500/30 bg-purple-500/10 px-3 py-1 text-sm font-medium text-purple-300">
+                  직관적인 경험
+                </div>
+                <h2 className="text-3xl md:text-5xl font-bold text-white tracking-tight">클릭, 수정, <span className="text-purple-400">끝.</span></h2>
+                <p className="text-lg text-slate-400 leading-relaxed">
+                  복잡한 설정 폼은 잊으세요. 화면에 보이는 텍스트를 클릭하면 즉시 입력창으로 변합니다. 변경사항은 엔터를 누르는 순간 실시간으로 저장됩니다.
+                </p>
+              </div>
+              <div className="flex-1 w-full relative">
+                <div className="aspect-video bg-slate-900 rounded-2xl border border-white/10 overflow-hidden relative shadow-2xl flex items-center justify-center">
+                  <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-transparent opacity-50"></div>
+                  {/* Fake UI for Feature 1 */}
+                  <div className="w-3/4 max-w-sm bg-white/5 border border-white/10 rounded-xl p-6 backdrop-blur-sm relative group-hover/feat:scale-105 transition-transform duration-500">
+                    <div className="absolute -top-3 -right-3 w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center shadow-lg group-hover/feat:-translate-y-2 group-hover/feat:translate-x-2 transition-transform duration-500">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m18 5-3-3H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7ZM14 2v4a2 2 0 0 0 2 2h4"/><path d="M10.5 15.5 8 18l2.5 2.5"/><path d="M13.5 15.5 16 18l-2.5 2.5"/></svg>
+                    </div>
+                    <div className="flex flex-col gap-3">
+                      <div className="h-8 w-full bg-white/10 rounded border-b-2 border-purple-500 flex items-center px-2">
+                        <span className="text-white font-bold animate-pulse">프론트엔드 개발자 포트폴리오|</span>
+                      </div>
+                      <div className="h-4 w-2/3 bg-white/5 rounded"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Feature 2 */}
+            <div className="flex flex-col md:flex-row-reverse items-center gap-12 md:gap-24 group/feat2">
+              <div className="flex-1 space-y-6">
+                <div className="inline-flex items-center rounded-full border border-fuchsia-500/30 bg-fuchsia-500/10 px-3 py-1 text-sm font-medium text-fuchsia-300">
+                  나만의 공간
+                </div>
+                <h2 className="text-3xl md:text-5xl font-bold text-white tracking-tight">단 하나의 <span className="text-fuchsia-400">URL</span></h2>
+                <p className="text-lg text-slate-400 leading-relaxed">
+                  mylink.com/nickname 으로 나만의 공간을 만드세요. GitHub, 기술 블로그, 링크드인, 포트폴리오까지 흩어져 있는 모든 활동을 한곳에 깔끔하게 정리할 수 있습니다.
+                </p>
+              </div>
+              <div className="flex-1 w-full relative">
+                <div className="aspect-video bg-slate-900 rounded-2xl border border-white/10 overflow-hidden relative shadow-2xl flex items-center justify-center">
+                  <div className="absolute inset-0 bg-gradient-to-tr from-fuchsia-500/10 to-transparent opacity-50"></div>
+                  {/* Fake UI for Feature 2 */}
+                  <div className="flex items-center bg-zinc-950 border border-white/10 rounded-full px-6 py-4 shadow-2xl group-hover/feat2:scale-105 transition-transform duration-500">
+                    <span className="text-zinc-500 text-lg sm:text-xl font-medium">mylink.com/</span>
+                    <span className="text-white text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-fuchsia-400 to-purple-400 ml-0.5">awesome_dev</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Feature 3 */}
+            <div className="flex flex-col md:flex-row items-center gap-12 md:gap-24 group/feat3">
+              <div className="flex-1 space-y-6">
+                <div className="inline-flex items-center rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-1 text-sm font-medium text-indigo-300">
+                  데이터 기반
+                </div>
+                <h2 className="text-3xl md:text-5xl font-bold text-white tracking-tight">실시간 <span className="text-indigo-400">클릭 통계</span></h2>
+                <p className="text-lg text-slate-400 leading-relaxed">
+                  방문자들이 어떤 링크에 가장 관심이 많은지 확인하세요. 링크별 클릭 수와 전체 방문자 통계를 직관적인 대시보드로 제공합니다.
+                </p>
+              </div>
+              <div className="flex-1 w-full relative">
+                <div className="aspect-video bg-slate-900 rounded-2xl border border-white/10 overflow-hidden relative shadow-2xl flex items-end justify-center p-8 gap-4">
+                  <div className="absolute inset-0 bg-gradient-to-t from-indigo-500/20 to-transparent opacity-50"></div>
+                  {/* Fake UI for Feature 3 (Bar Chart) */}
+                  <div className="w-12 bg-white/5 rounded-t-lg relative h-[40%] group-hover/feat3:bg-white/10 transition-colors duration-500 delay-75">
+                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-white font-bold opacity-0 group-hover/feat3:opacity-100 transition-opacity duration-500">12</div>
+                  </div>
+                  <div className="w-12 bg-indigo-500/50 rounded-t-lg relative h-[80%] group-hover/feat3:bg-indigo-500/70 transition-colors duration-500 delay-150 group-hover/feat3:-translate-y-2">
+                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-white font-bold opacity-0 group-hover/feat3:opacity-100 transition-opacity duration-500">85</div>
+                  </div>
+                  <div className="w-12 bg-white/5 rounded-t-lg relative h-[60%] group-hover/feat3:bg-white/10 transition-colors duration-500 delay-200">
+                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-white font-bold opacity-0 group-hover/feat3:opacity-100 transition-opacity duration-500">43</div>
+                  </div>
+                  <div className="w-12 bg-white/5 rounded-t-lg relative h-[30%] group-hover/feat3:bg-white/10 transition-colors duration-500 delay-300">
+                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-white font-bold opacity-0 group-hover/feat3:opacity-100 transition-opacity duration-500">8</div>
+                  </div>
+                  <div className="absolute bottom-0 left-0 w-full h-px bg-white/20"></div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        {/* CTA Section */}
+        <section className="w-full relative z-10 py-32 flex flex-col items-center justify-center text-center px-6 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-purple-900/20 pointer-events-none"></div>
+          <h2 className="text-4xl md:text-6xl font-black text-white mb-6 tracking-tight relative z-10">
+            지금 바로 시작하세요.
+          </h2>
+          <p className="text-xl text-slate-400 mb-10 relative z-10">
+            단 3초면 나만의 링크 페이지가 완성됩니다.
+          </p>
+          <Button 
+            onClick={async () => {
+              try {
+                await signInWithGoogle();
+              } catch (e) {
+                toast.error("로그인에 실패했습니다.");
+              }
+            }}
+            className="h-16 px-12 bg-white text-purple-900 hover:bg-zinc-200 font-black text-lg rounded-full flex items-center justify-center gap-3 transition-all shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] hover:shadow-[0_0_60px_-15px_rgba(255,255,255,0.5)] hover:-translate-y-1 relative z-10"
+          >
+            Google 계정으로 무료 시작
+          </Button>
+        </section>
+
+        {/* Footer */}
+        <footer className="w-full py-8 border-t border-white/5 flex items-center justify-center text-slate-500 text-sm relative z-10">
+          <p>© {new Date().getFullYear()} MyLink. All rights reserved.</p>
+        </footer>
       </div>
     );
   }
