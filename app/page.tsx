@@ -1,6 +1,6 @@
 "use client";
-
 import { useState } from "react";
+import NextLink from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -307,9 +307,9 @@ export default function Page() {
       <div className="relative min-h-svh w-full bg-slate-950 text-slate-50 flex flex-col items-center">
         {/* Header */}
         <header className="w-full flex items-center justify-between p-4 px-6 md:px-12 max-w-7xl mx-auto border-b border-slate-800">
-          <div className="font-extrabold text-xl tracking-tight text-purple-500">
+          <NextLink href="/" className="font-extrabold text-xl tracking-tight text-purple-500">
             MyLink
-          </div>
+          </NextLink>
           <Button 
             className="bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-none px-6"
             onClick={async () => {
@@ -392,10 +392,16 @@ export default function Page() {
     <div className="relative min-h-svh w-full overflow-hidden bg-slate-950 text-slate-50 selection:bg-indigo-500/30">
       {/* 마이페이지 헤더 */}
       <header className="w-full flex items-center justify-between p-4 px-6 md:px-12 backdrop-blur-md bg-white/5 border-b border-white/10 z-20 sticky top-0">
-        <div className="font-bold text-lg tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-zinc-400">
+        <NextLink href="/" className="font-bold text-lg tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-zinc-400">
           MyLink 홈
-        </div>
+        </NextLink>
         <div className="flex items-center gap-4 relative">
+          <a
+            href="/stats"
+            className="hidden sm:block text-sm font-medium text-zinc-300 hover:text-white transition-colors bg-white/5 hover:bg-white/10 px-4 py-2 rounded-full border border-white/10"
+          >
+            통계 보기
+          </a>
           <a
             href={`/${profile?.nickname || ''}`}
             target="_blank"
@@ -422,6 +428,13 @@ export default function Page() {
             <>
               <div className="fixed inset-0 z-30" onClick={() => setIsMenuOpen(false)} />
               <div className="absolute right-0 top-full mt-2 w-48 rounded-xl bg-slate-900 border border-slate-800 shadow-xl overflow-hidden z-40 py-1">
+                <a
+                  href="/stats"
+                  className="block w-full text-left px-4 py-2.5 text-sm font-medium text-zinc-300 hover:text-white hover:bg-slate-800 transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  통계 보기
+                </a>
                 <a
                   href={`/${profile?.nickname || ''}`}
                   target="_blank"
