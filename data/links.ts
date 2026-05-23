@@ -2,6 +2,7 @@ export interface Link {
   id: string;
   title: string;
   url: string;
+  clickCount?: number;
   createdAt: string;
   updatedAt: string;
 }

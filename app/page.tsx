@@ -71,6 +71,7 @@ export default function Page() {
           id: doc.id,
           title: data.title,
           url: data.url,
+          clickCount: data.clickCount || 0,
           createdAt: data.createdAt ? data.createdAt.toDate().toISOString() : new Date().toISOString(),
           updatedAt: data.updatedAt ? data.updatedAt.toDate().toISOString() : new Date().toISOString(),
         } as Link;
@@ -87,6 +88,7 @@ export default function Page() {
       await addDoc(linksRef, {
         title: data.title,
         url: data.url,
+        clickCount: 0,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
@@ -766,6 +768,11 @@ export default function Page() {
 
                         {/* Action Buttons Container */}
                         <div className="absolute right-0 flex items-center gap-1">
+                          <div className="mr-2 flex items-center gap-1.5 px-2 py-1 rounded-md bg-white/5 border border-white/5 text-xs font-semibold text-zinc-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                            <span>{link.clickCount || 0}</span>
+                          </div>
+                          
                           <Button 
                             variant="ghost" 
                             size="icon" 

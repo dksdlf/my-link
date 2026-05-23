@@ -3,7 +3,7 @@
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { db } from "@/lib/firebase";
-import { doc, getDoc, collection, query, orderBy, getDocs } from "firebase/firestore";
+import { doc, getDoc, collection, query, orderBy, getDocs, updateDoc, increment } from "firebase/firestore";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { type Link } from "@/data/links";
@@ -55,6 +55,7 @@ export default function PublicProfilePage() {
           id: doc.id,
           title: data.title,
           url: data.url,
+          clickCount: data.clickCount || 0,
           createdAt: data.createdAt ? data.createdAt.toDate().toISOString() : new Date().toISOString(),
           updatedAt: data.updatedAt ? data.updatedAt.toDate().toISOString() : new Date().toISOString(),
         } as Link;
@@ -166,6 +167,13 @@ export default function PublicProfilePage() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block w-full outline-none"
+                  onClick={() => {
+                    if (uid) {
+                      updateDoc(doc(db, "users", uid, "links", link.id), {
+                        clickCount: increment(1)
+                      }).catch(console.error);
+                    }
+                  }}
                 >
                   <Card className="relative overflow-hidden rounded-2xl bg-white/5 border border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.1)] backdrop-blur-md transition-all duration-300 py-0 gap-0 group-hover:bg-white/10 group-hover:border-white/20 group-hover:-translate-y-1 group-hover:shadow-[0_8px_40px_rgba(147,51,234,0.15)] group-focus-within:ring-2 group-focus-within:ring-purple-600">
                     <div className="absolute inset-0 bg-gradient-to-r from-purple-600/0 via-purple-600/0 to-fuchsia-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />

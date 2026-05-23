@@ -16,8 +16,13 @@ service cloud.firestore {
         // 읽기: 누구나 가능
         allow read: if true;
         
-        // 쓰기: 로그인되어 있고 본인의 UID(상위 문서 ID)와 일치할 때만
-        allow write: if request.auth != null && request.auth.uid == userId;
+        // 생성/삭제: 로그인되어 있고 본인의 UID(상위 문서 ID)와 일치할 때만
+        allow create, delete: if request.auth != null && request.auth.uid == userId;
+        
+        // 수정: 본인이거나, 오직 clickCount 필드만 1 증가시키는 경우 누구나 허용
+        allow update: if (request.auth != null && request.auth.uid == userId) || 
+          (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['clickCount']) && 
+           request.resource.data.clickCount == resource.data.clickCount + 1);
       }
     }
 
