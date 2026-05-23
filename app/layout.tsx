@@ -13,6 +13,29 @@ const fontMono = Geist_Mono({
 
 import { Toaster } from "@/components/ui/sonner"
 import { QueryProvider } from "@/components/query-provider"
+import { Metadata } from "next"
+
+export const metadata: Metadata = {
+  metadataBase: new URL("https://my-link-six-orcin.vercel.app/"),
+  title: {
+    template: "%s | MyLink",
+    default: "MyLink | Your Unified Developer Profile",
+  },
+  description: "Gather all your scattered activities into a single, clean page.",
+  openGraph: {
+    title: "MyLink | Your Unified Developer Profile",
+    description: "Gather all your scattered activities into a single, clean page.",
+    url: "https://my-link-six-orcin.vercel.app/",
+    siteName: "MyLink",
+    locale: "ko_KR",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "MyLink | Your Unified Developer Profile",
+    description: "Gather all your scattered activities into a single, clean page.",
+  },
+}
 
 export default function RootLayout({
   children,
